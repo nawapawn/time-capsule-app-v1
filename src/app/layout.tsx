@@ -1,10 +1,12 @@
+// src/app/layout.tsx
 "use client";
 
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import CreateCapsuleForm from "@/components/CreateCapsuleForm"; 
+import CreateCapsuleForm from "@/components/CreateCapsuleForm";
 import { useState } from "react";
 import "./globals.css";
+
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -13,8 +15,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const NO_NAVBAR_PATHS = ["/login", "/signup"];
   const shouldShowNavbar = !NO_NAVBAR_PATHS.includes(pathname);
 
+
   return (
     <html lang="en">
+      <head>
+        <link rel="shortcut icon" href="/public/export-removebg-preview.png" sizes="64x64" type="image/x-icon " />
+      </head>
       <body>
         {/* Navbar */}
         {shouldShowNavbar && (
