@@ -35,7 +35,8 @@ const FeedCapsuleCard: React.FC<Props> = ({
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-      const diff = capsule.targetDate.getTime() - now.getTime();
+      const targetDate = new Date(capsule.targetDate); // แปลงเป็น Date
+      const diff = targetDate.getTime() - now.getTime();
       if (diff <= 0) setCountdown("Opened!");
       else {
         const d = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -45,6 +46,7 @@ const FeedCapsuleCard: React.FC<Props> = ({
         setCountdown(`${d}d ${h}h ${m}m ${s}s`);
       }
     }, 1000);
+
     return () => clearInterval(interval);
   }, [capsule.targetDate]);
 
@@ -65,13 +67,7 @@ const FeedCapsuleCard: React.FC<Props> = ({
               ...c,
               replies: [
                 ...c.replies,
-                {
-                  id: Date.now(),
-                  user: "GuestUser",
-                  avatar,
-                  text,
-                  replies: [],
-                },
+                { id: Date.now(), user: "GuestUser", avatar, text, replies: [] },
               ],
             }
           : c
@@ -84,7 +80,7 @@ const FeedCapsuleCard: React.FC<Props> = ({
     onShare && onShare(capsule, shareRef ?? React.createRef());
 
   const isSmall = size === "small";
-  const cardWidth = isSmall ? "min-w-[220px] max-w-[220px]" : "min-w-full";
+  const cardWidth = isSmall ? "min-w-full sm:min-w-[200px]" : "min-w-full";
   const titleSize = isSmall ? "text-base" : "text-lg";
   const avatarSize = isSmall ? 24 : 32;
   const iconSize = isSmall ? 5 : 6;
@@ -94,7 +90,7 @@ const FeedCapsuleCard: React.FC<Props> = ({
 
   return (
     <div
-      className={`bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col relative ${cardWidth}`}
+      className={`bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col relative ${cardWidth} transition-all`}
     >
       {capsule.mood && (
         <div className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full shadow-md z-10">
@@ -140,8 +136,7 @@ const FeedCapsuleCard: React.FC<Props> = ({
 
         <div className="flex justify-between items-center mt-2">
           <span className="flex items-center gap-1 text-xs text-gray-500">
-            <Eye className={`h-${iconSize} w-${iconSize}`} />{" "}
-            {formatViews(capsule.views)}
+            <Eye className={`h-${iconSize} w-${iconSize}`} /> {formatViews(capsule.views)}
           </span>
 
           <div className="flex gap-3">

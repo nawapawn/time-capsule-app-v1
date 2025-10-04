@@ -18,13 +18,16 @@ const HomePage: React.FC = () => {
   const { feedData, setFeedData, toggleBookmark, isBookmarked } = useCapsule();
   const [popularCapsules, setPopularCapsules] = useState<CapsuleType[]>([]);
   const [shareCapsule, setShareCapsule] = useState<CapsuleType | null>(null);
-  const [shareAnchor, setShareAnchor] = useState<RefObject<HTMLButtonElement | null> | null>(null);
+  const [shareAnchor, setShareAnchor] =
+    useState<RefObject<HTMLButtonElement | null> | null>(null);
   const [showCreateCapsuleForm, setShowCreateCapsuleForm] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const usersRes = await fetch(`https://randomuser.me/api/?results=${posts.length}&inc=name,picture`);
+        const usersRes = await fetch(
+          `https://randomuser.me/api/?results=${posts.length}&inc=name,picture`
+        );
         const usersData = await usersRes.json();
         const users: RandomUser[] = usersData.results;
 
@@ -45,7 +48,9 @@ const HomePage: React.FC = () => {
         });
 
         setFeedData(capsules.reverse());
-        setPopularCapsules([...capsules].sort((a, b) => b.views - a.views).slice(0, 10));
+        setPopularCapsules(
+          [...capsules].sort((a, b) => b.views - a.views).slice(0, 10)
+        );
       } catch (err) {
         console.error(err);
       }
@@ -53,7 +58,10 @@ const HomePage: React.FC = () => {
     fetchData();
   }, [setFeedData]);
 
-  const handleShare = (capsule: CapsuleType, ref: RefObject<HTMLButtonElement | null>) => {
+  const handleShare = (
+    capsule: CapsuleType,
+    ref: RefObject<HTMLButtonElement | null>
+  ) => {
     setShareCapsule(capsule);
     setShareAnchor(ref);
   };
@@ -68,7 +76,10 @@ const HomePage: React.FC = () => {
       <Navbar onOpenCreateCapsule={() => setShowCreateCapsuleForm(true)} />
 
       {showCreateCapsuleForm && (
-        <CreateCapsuleForm onCreate={handleCreateCapsule} onClose={() => setShowCreateCapsuleForm(false)} />
+        <CreateCapsuleForm
+          onCreate={handleCreateCapsule}
+          onClose={() => setShowCreateCapsuleForm(false)}
+        />
       )}
 
       <div className="w-full flex justify-center mt-4">
@@ -102,7 +113,9 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {shareCapsule && shareAnchor && <ShareButton capsuleId={shareCapsule.id} shareRef={shareAnchor} />}
+      {shareCapsule && shareAnchor && (
+        <ShareButton capsuleId={shareCapsule.id} shareRef={shareAnchor} />
+      )}
     </div>
   );
 };

@@ -16,7 +16,7 @@ const PopularMemories: React.FC<PopularMemoriesProps> = ({
 }) => {
   return (
     <section className="w-full">
-      <h2 className="text-3xl font-extrabold text-gray-900 mb-6 text-center">
+      <h2 className="text-3xl font-bold mb-4 text-gray-900">
         Popular Memories
       </h2>
       <div className="flex gap-6 py-4 px-2 overflow-x-auto scrollbar-hide">
