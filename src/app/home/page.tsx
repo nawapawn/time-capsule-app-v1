@@ -1,20 +1,14 @@
-// src/app/home/page.tsx
 "use client";
 import React, { useEffect, useState, RefObject } from "react";
 import FeedCapsuleCard from "@/components/Home/FeedCapsuleCard";
 import PopularMemories from "@/components/Home/PopularMemories";
 import ShareButton from "@/components/Home/ShareButton";
 import { CapsuleType, moodOptions } from "@/utils/capsuleUtils";
+import { posts } from "@/data/posts";
 
 interface RandomUser {
   name: { first: string; last: string };
   picture: { large: string };
-}
-
-interface Post {
-  id: number;
-  title: string;
-  body: string;
 }
 
 const HomePage: React.FC = () => {
@@ -26,25 +20,19 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Random avatars
         const usersRes = await fetch("https://randomuser.me/api/?results=20&inc=name,picture");
         const usersData = await usersRes.json();
         const users: RandomUser[] = usersData.results;
 
-        // Random post titles
-        const postsRes = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=20");
-        const posts: Post[] = await postsRes.json();
-
-        const capsules: CapsuleType[] = posts.map((p, i) => {
+        const capsules: CapsuleType[] = posts.slice(0, 20).map((title, i) => {
           const user = users[i];
           const mood = moodOptions[i % moodOptions.length];
           return {
-            id: p.id,
-            title: p.title,
-            content: p.body,
+            id: i,
+            title,
             creator: `${user.name.first} ${user.name.last}`,
             creatorAvatar: user.picture.large,
-            imageSrc: `https://picsum.photos/seed/${p.id}/600/400`,
+            imageSrc: `https://picsum.photos/seed/${i}/600/400`,
             mood,
             targetDate: new Date(Date.now() + (i + 1) * 86400000),
             views: Math.floor(Math.random() * 9999) + 100,

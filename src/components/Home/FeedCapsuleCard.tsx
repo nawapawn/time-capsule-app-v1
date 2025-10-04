@@ -16,7 +16,14 @@ interface Props {
   shareRef?: RefObject<HTMLButtonElement | null>;
 }
 
-const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, size = "large", shareRef }) => {
+const FeedCapsuleCard: React.FC<Props> = ({
+  capsule,
+  onBookmark,
+  onShare,
+  rank,
+  size = "large",
+  shareRef,
+}) => {
   const [countdown, setCountdown] = useState("");
   const [comments, setComments] = useState<CommentItemType[]>([]);
   const [showComments, setShowComments] = useState(false);
@@ -75,8 +82,7 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
   const avatarSize = isSmall ? 24 : 32;
   const iconSize = isSmall ? 5 : 6;
 
-  // Deterministic avatar per capsule
-  const avatarUrl = capsule.creatorAvatar || `https://i.pravatar.cc/150?img=${(capsule.id * 13 % 70) + 1}`;
+  const avatarUrl = capsule.creatorAvatar || `https://i.pravatar.cc/150?img=${(capsule.id * 13) % 70 + 1}`;
 
   return (
     <div className={`bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col relative ${cardWidth}`}>
@@ -166,17 +172,6 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
           </div>
         )}
       </div>
-
-      <style jsx>{`
-        @keyframes fadeUp {
-          0% { opacity: 0; transform: translateY(4px); }
-          50% { opacity: 1; transform: translateY(-2px); }
-          100% { opacity: 0; transform: translateY(-8px); }
-        }
-        .animate-fade-up {
-          animation: fadeUp 2s ease-out forwards;
-        }
-      `}</style>
     </div>
   );
 };
