@@ -1,3 +1,4 @@
+// src/components/Home/FeedCapsuleCard.tsx
 "use client";
 import React, { useState, useEffect, RefObject } from "react";
 import Image from "next/image";
@@ -86,6 +87,17 @@ const FeedCapsuleCard: React.FC<Props> = ({
 
   return (
     <div className={`bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col relative ${cardWidth}`}>
+
+      {/* Mood/ความรู้สึก มุมบนขวา */}
+      {capsule.mood && (
+        <div className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full shadow-md z-10">
+          <span className={`text-sm font-medium ${capsule.mood.color}`}>
+            {capsule.mood.emoji} {capsule.mood.name}
+          </span>
+        </div>
+      )}
+
+      {/* Rank */}
       {rank !== undefined && (
         <div className="absolute top-2 left-2 bg-yellow-400 text-white font-bold rounded-full w-7 h-7 flex items-center justify-center shadow-md text-sm z-10">
           {rank}

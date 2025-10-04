@@ -17,7 +17,7 @@ export interface CapsuleType {
   creator: string;
   creatorAvatar: string;
   imageSrc?: string;
-  mood: typeof moodOptions[number];
+  mood: typeof moodOptions[number]; // เป็น object เดียว
   targetDate: Date;
   views: number;
   bookmarked: boolean;
@@ -30,7 +30,6 @@ export const formatViews = (views: number) =>
   views >= 1000 ? (views / 1000).toFixed(1) + "k" : views.toString();
 
 // ฟังก์ชันช่วยดึง postText แบบบันทึกแรก
-// ใช้ Capsule.postText ถ้ามี, ถ้าไม่ใช้ posts[0]
 import { posts } from "@/data/posts";
 export const getFirstPostText = (capsule: CapsuleType): string => {
   return capsule.postText || posts[0];

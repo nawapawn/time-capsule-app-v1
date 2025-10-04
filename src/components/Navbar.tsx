@@ -1,4 +1,3 @@
-// src/components/Navbar.tsx
 "use client";
 import { useState } from "react";
 import Link from "next/link";
@@ -45,7 +44,7 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
   const navItems = [
     { name: "Home", icon: Home, href: "/home" },
     { name: "Search", icon: Search, href: "/search" },
-    { name: "Create", icon: PlusCircle, href: "/create" }, // ถ้าอยากใช้ modal, จะเรียก onOpenCreateCapsule
+    { name: "Create", icon: PlusCircle }, // ไม่มี href เพราะเป็น modal
     { name: "Saved", icon: Bookmark, href: "/saved" },
     { name: "Profile", icon: User, href: "/profile" },
   ];
@@ -56,23 +55,27 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
     { name: "Log Out", icon: LogOut, href: "/logout", isDestructive: true, isSeparator: false },
   ];
 
-  const navLinkClass = (href: string) => `
+  const navLinkClass = (href?: string) => `
     flex flex-col items-center justify-center p-2 rounded-full
     text-gray-500 hover:bg-gray-100 hover:text-black
-    ${activePath === href ? 'text-black' : ''}
+    ${activePath === href ? "text-black" : ""}
     transition-all duration-150 ease-in-out
   `;
 
-  const iconClass = (href: string) => `
+  const iconClass = (href?: string) => `
     w-7 h-7 md:w-8 md:h-8
-    ${activePath === href ? 'scale-105' : 'hover:scale-105'}
+    ${activePath === href ? "scale-105" : "hover:scale-105"}
   `;
 
-  const headerButtonClass = "p-2 rounded-full transition-colors duration-150 text-gray-500 hover:bg-gray-100 hover:text-black";
+  const headerButtonClass =
+    "p-2 rounded-full transition-colors duration-150 text-gray-500 hover:bg-gray-100 hover:text-black";
 
-  const handleNavClick = (href: string, name: string) => {
-    setActivePath(href);
-    if (name === "Create" && onOpenCreateCapsule) onOpenCreateCapsule();
+  const handleNavClick = (item: typeof navItems[number]) => {
+    if (item.name === "Create" && onOpenCreateCapsule) {
+      onOpenCreateCapsule(); // เปิด modal
+    } else if (item.href) {
+      setActivePath(item.href);
+    }
   };
 
   return (
@@ -90,9 +93,7 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
           <Logo />
         </div>
 
-        <div className="hidden md:block"></div>
-
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-3 ml-auto">
           <button className={headerButtonClass} title="Notifications">
             <Bell className="w-6 h-6" />
           </button>
@@ -108,40 +109,40 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
 
       {/* Desktop Sidebar */}
       <nav className="hidden md:flex flex-col fixed top-0 left-0 h-screen w-[70px] z-30 transition-transform duration-300">
-        <div className="pt-4 pb-10 flex justify-center items-center"><Logo /></div>
+        <div className="pt-4 pb-10 flex justify-center items-center">
+          <Logo />
+        </div>
 
         <div className="flex flex-col gap-10 items-center justify-center flex-1">
           {navItems.map((item) => {
             const IconComponent = item.icon;
-            return (
-              item.name === "Create" && onOpenCreateCapsule ? (
-                <button
-                  key={item.name}
-                  onClick={() => handleNavClick(item.href, item.name)}
-                  className={navLinkClass(item.href)}
-                  title={item.name}
-                  aria-label={item.name}
-                >
-                  <IconComponent className={iconClass(item.href)} />
-                </button>
-              ) : (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => handleNavClick(item.href, item.name)}
-                  className={navLinkClass(item.href)}
-                  title={item.name}
-                  aria-label={item.name}
-                >
-                  <IconComponent className={iconClass(item.href)} />
-                </Link>
-              )
+            return item.name === "Create" && onOpenCreateCapsule ? (
+              <button
+                key={item.name}
+                onClick={() => handleNavClick(item)}
+                className={navLinkClass()}
+                title={item.name}
+                aria-label={item.name}
+              >
+                <IconComponent className={iconClass()} />
+              </button>
+            ) : (
+              <Link
+                key={item.name}
+                href={item.href || "#"}
+                onClick={() => handleNavClick(item)}
+                className={navLinkClass(item.href)}
+                title={item.name}
+                aria-label={item.name}
+              >
+                <IconComponent className={iconClass(item.href)} />
+              </Link>
             );
           })}
         </div>
 
         <div className="mb-6 mx-auto text-gray-500">
-          <button onClick={toggleMenu} className={navLinkClass("/menu")} title="Menu">
+          <button onClick={toggleMenu} className={navLinkClass()} title="Menu">
             <Menu className="w-7 h-7" />
           </button>
         </div>
@@ -152,29 +153,27 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
         <div className="flex justify-around items-center h-full max-w-lg mx-auto">
           {navItems.map((item) => {
             const IconComponent = item.icon;
-            return (
-              item.name === "Create" && onOpenCreateCapsule ? (
-                <button
-                  key={item.name}
-                  onClick={() => handleNavClick(item.href, item.name)}
-                  className={navLinkClass(item.href)}
-                  title={item.name}
-                  aria-label={item.name}
-                >
-                  <IconComponent className={iconClass(item.href)} />
-                </button>
-              ) : (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => handleNavClick(item.href, item.name)}
-                  className={navLinkClass(item.href)}
-                  title={item.name}
-                  aria-label={item.name}
-                >
-                  <IconComponent className={iconClass(item.href)} />
-                </Link>
-              )
+            return item.name === "Create" && onOpenCreateCapsule ? (
+              <button
+                key={item.name}
+                onClick={() => handleNavClick(item)}
+                className={navLinkClass()}
+                title={item.name}
+                aria-label={item.name}
+              >
+                <IconComponent className={iconClass()} />
+              </button>
+            ) : (
+              <Link
+                key={item.name}
+                href={item.href || "#"}
+                onClick={() => handleNavClick(item)}
+                className={navLinkClass(item.href)}
+                title={item.name}
+                aria-label={item.name}
+              >
+                <IconComponent className={iconClass(item.href)} />
+              </Link>
             );
           })}
         </div>
@@ -184,11 +183,18 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
       {menuOpen && (
         <>
           <div className="fixed inset-0 bg-black/50 z-40" onClick={toggleMenu}></div>
-          <div className="fixed top-14 right-4 md:top-auto md:bottom-6 md:left-20 
+          <div
+            className="fixed top-14 right-4 md:top-auto md:bottom-6 md:left-20 
                           bg-white text-gray-800 p-4 rounded-xl shadow-2xl 
-                          flex flex-col gap-1 z-50 w-64 md:w-80 border border-gray-200">
+                          flex flex-col gap-1 z-50 w-64 md:w-80 border border-gray-200"
+          >
             {dropdownMenuItems.map((item, index) => (
-              <div key={index} className={`flex items-center gap-2 p-2 rounded ${item.isDestructive ? 'text-red-500 hover:bg-red-100' : 'hover:bg-gray-100'}`}>
+              <div
+                key={index}
+                className={`flex items-center gap-2 p-2 rounded ${
+                  item.isDestructive ? "text-red-500 hover:bg-red-100" : "hover:bg-gray-100"
+                }`}
+              >
                 <item.icon className="w-5 h-5" />
                 <Link href={item.href}>{item.name}</Link>
                 {item.isSeparator && <hr className="my-1 border-gray-200" />}
