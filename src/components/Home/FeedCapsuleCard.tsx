@@ -1,4 +1,3 @@
-// src/components/Home/FeedCapsuleCard.tsx
 "use client";
 import React, { useState, useEffect, RefObject } from "react";
 import Image from "next/image";
@@ -42,17 +41,16 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
 
   // Comment handlers
   const handleAddComment = (text: string) => {
-    setComments(prev => [
-      ...prev,
-      { id: Date.now(), user: "GuestUser", avatar: `https://i.pravatar.cc/150?img=${(Date.now() % 70) + 1}`, text, replies: [] },
-    ]);
+    const avatar = `https://i.pravatar.cc/150?img=${(Date.now() % 70) + 1}`;
+    setComments(prev => [...prev, { id: Date.now(), user: "GuestUser", avatar, text, replies: [] }]);
   };
 
   const handleAddReply = (parentId: number, text: string) => {
+    const avatar = `https://i.pravatar.cc/150?img=${(Date.now() % 70) + 1}`;
     setComments(prev =>
       prev.map(c =>
         c.id === parentId
-          ? { ...c, replies: [...c.replies, { id: Date.now(), user: "GuestUser", avatar: `https://i.pravatar.cc/150?img=${(Date.now() % 70) + 1}`, text, replies: [] }] }
+          ? { ...c, replies: [...c.replies, { id: Date.now(), user: "GuestUser", avatar, text, replies: [] }] }
           : c
       )
     );
@@ -77,7 +75,7 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
   const avatarSize = isSmall ? 24 : 32;
   const iconSize = isSmall ? 5 : 6;
 
-  // Avatar URL: deterministic, unique per capsule
+  // Deterministic avatar per capsule
   const avatarUrl = capsule.creatorAvatar || `https://i.pravatar.cc/150?img=${(capsule.id * 13 % 70) + 1}`;
 
   return (
@@ -119,7 +117,6 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
           </span>
 
           <div className="flex gap-3 relative">
-            {/* Bookmark */}
             <button
               onClick={() => onBookmark(capsule.id)}
               className="hover:text-blue-500 transition-colors flex items-center gap-1"
@@ -133,7 +130,6 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
               )}
             </button>
 
-            {/* Share */}
             <div className="relative">
               <button
                 onClick={handleShareClick}
@@ -151,7 +147,6 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
               )}
             </div>
 
-            {/* Comments */}
             <button
               onClick={() => setShowComments(prev => !prev)}
               className="hover:text-blue-500 transition-colors flex items-center gap-1"

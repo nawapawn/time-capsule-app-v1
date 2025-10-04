@@ -1,4 +1,3 @@
-// src/components/ProfileAvatar.tsx
 "use client";
 import React from "react";
 import Image from "next/image";
@@ -18,6 +17,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ src, alt = "User Avatar",
       width={size}
       height={size}
       className={`rounded-full border border-gray-200 object-cover ${className || ""}`}
+      unoptimized // สำคัญมากสำหรับ dynamic URLs
     />
   );
 };
