@@ -23,6 +23,7 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
   const [showComments, setShowComments] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Countdown timer
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
@@ -39,10 +40,11 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
     return () => clearInterval(interval);
   }, [capsule.targetDate]);
 
+  // Comment handlers
   const handleAddComment = (text: string) => {
     setComments(prev => [
       ...prev,
-      { id: Date.now(), user: "GuestUser", avatar: "/default_avatar.png", text, replies: [] },
+      { id: Date.now(), user: "GuestUser", avatar: `https://i.pravatar.cc/150?img=${(Date.now() % 70) + 1}`, text, replies: [] },
     ]);
   };
 
@@ -50,12 +52,13 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
     setComments(prev =>
       prev.map(c =>
         c.id === parentId
-          ? { ...c, replies: [...c.replies, { id: Date.now(), user: "GuestUser", avatar: "/default_avatar.png", text, replies: [] }] }
+          ? { ...c, replies: [...c.replies, { id: Date.now(), user: "GuestUser", avatar: `https://i.pravatar.cc/150?img=${(Date.now() % 70) + 1}`, text, replies: [] }] }
           : c
       )
     );
   };
 
+  // Copy/share
   const handleCopyClick = () => {
     navigator.clipboard.writeText(`${window.location.origin}/capsule/${capsule.id}`);
     setCopied(true);
@@ -67,11 +70,15 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
     handleCopyClick();
   };
 
+  // Size settings
   const isSmall = size === "small";
   const cardWidth = isSmall ? "min-w-[220px] max-w-[220px]" : "min-w-full";
   const titleSize = isSmall ? "text-base" : "text-lg";
   const avatarSize = isSmall ? 24 : 32;
   const iconSize = isSmall ? 5 : 6;
+
+  // Avatar URL: deterministic, unique per capsule
+  const avatarUrl = capsule.creatorAvatar || `https://i.pravatar.cc/150?img=${(capsule.id * 13 % 70) + 1}`;
 
   return (
     <div className={`bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col relative ${cardWidth}`}>
@@ -81,7 +88,7 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
         </div>
       )}
 
-      {/* รูปโพสต์ */}
+      {/* Image */}
       <div className="relative w-full aspect-video bg-gray-100">
         {capsule.imageSrc ? (
           <Image src={capsule.imageSrc} alt={capsule.title} fill className="object-cover" />
@@ -95,9 +102,9 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
       <div className="p-3 flex flex-col gap-2">
         <h3 className={`${titleSize} font-bold text-gray-900 line-clamp-1`}>{capsule.title}</h3>
 
-        {/* โปรไฟล์ */}
+        {/* Profile */}
         <div className="flex items-center gap-2 mt-1">
-          <ProfileAvatar src={capsule.creatorAvatar} size={avatarSize} />
+          <ProfileAvatar src={avatarUrl} size={avatarSize} />
           <span className="text-xs text-gray-700">@{capsule.creator}</span>
         </div>
 
@@ -105,7 +112,7 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
           <span className="font-semibold text-blue-600">{countdown}</span>
         </div>
 
-        {/* Action Buttons */}
+        {/* Actions */}
         <div className="flex justify-between items-center mt-2">
           <span className="flex items-center gap-1 text-xs text-gray-500">
             <Eye className={`h-${iconSize} w-${iconSize}`} /> {formatViews(capsule.views)}
@@ -167,18 +174,9 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
 
       <style jsx>{`
         @keyframes fadeUp {
-          0% {
-            opacity: 0;
-            transform: translateY(4px);
-          }
-          50% {
-            opacity: 1;
-            transform: translateY(-2px);
-          }
-          100% {
-            opacity: 0;
-            transform: translateY(-8px);
-          }
+          0% { opacity: 0; transform: translateY(4px); }
+          50% { opacity: 1; transform: translateY(-2px); }
+          100% { opacity: 0; transform: translateY(-8px); }
         }
         .animate-fade-up {
           animation: fadeUp 2s ease-out forwards;

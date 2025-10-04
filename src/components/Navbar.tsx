@@ -19,10 +19,9 @@ import ProfileAvatar from "./ProfileAvatar";
 
 interface NavbarProps {
   onOpenCreateCapsule?: () => void;
-  currentUser?: { name: string; avatar?: string }; // สำหรับ profile avatar
+  currentUser?: { name: string; avatar?: string };
 }
 
-// --- Logo Component ---
 const Logo = () => (
   <Link href="/home" className="cursor-pointer">
     <div className="flex items-center justify-center">
@@ -46,7 +45,7 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
   const navItems = [
     { name: "Home", icon: Home, href: "/home" },
     { name: "Search", icon: Search, href: "/search" },
-    { name: "Create", icon: PlusCircle, href: "#" }, // เปิด modal
+    { name: "Create", icon: PlusCircle, href: "/create" }, // ถ้าอยากใช้ modal, จะเรียก onOpenCreateCapsule
     { name: "Saved", icon: Bookmark, href: "/saved" },
     { name: "Profile", icon: User, href: "/profile" },
   ];
@@ -71,11 +70,15 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
 
   const headerButtonClass = "p-2 rounded-full transition-colors duration-150 text-gray-500 hover:bg-gray-100 hover:text-black";
 
+  const handleNavClick = (href: string, name: string) => {
+    setActivePath(href);
+    if (name === "Create" && onOpenCreateCapsule) onOpenCreateCapsule();
+  };
+
   return (
     <>
       {/* Fixed Top Header */}
       <header className="fixed top-0 left-0 w-full h-14 z-40 flex items-center justify-between px-4 md:px-6 bg-white/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none">
-        {/* MOBILE: Notification Bell */}
         <div className="md:hidden flex items-center gap-2">
           <button className={headerButtonClass} title="Notifications">
             <Bell className="w-6 h-6" />
@@ -83,15 +86,12 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
           {currentUser && <ProfileAvatar src={currentUser.avatar} size={28} />}
         </div>
 
-        {/* MOBILE: Logo */}
         <div className="md:hidden flex-1 flex justify-center absolute left-1/2 transform -translate-x-1/2">
           <Logo />
         </div>
 
-        {/* DESKTOP: Placeholder */}
         <div className="hidden md:block"></div>
 
-        {/* DESKTOP: Notification Bell + Avatar */}
         <div className="hidden md:flex items-center gap-3">
           <button className={headerButtonClass} title="Notifications">
             <Bell className="w-6 h-6" />
@@ -99,7 +99,6 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
           {currentUser && <ProfileAvatar src={currentUser.avatar} size={32} />}
         </div>
 
-        {/* MOBILE: Hamburger Menu */}
         <div className="md:hidden">
           <button onClick={toggleMenu} className={headerButtonClass} title="Menu">
             <Menu className="w-6 h-6" />
@@ -114,22 +113,29 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
         <div className="flex flex-col gap-10 items-center justify-center flex-1">
           {navItems.map((item) => {
             const IconComponent = item.icon;
-            const handleClick = (e: React.MouseEvent) => {
-              e.preventDefault();
-              setActivePath(item.href);
-              if (item.name === "Create" && onOpenCreateCapsule) onOpenCreateCapsule();
-            };
             return (
-              <a
-                key={item.name}
-                href={item.href}
-                onClick={handleClick}
-                className={navLinkClass(item.href)}
-                title={item.name}
-                aria-label={item.name}
-              >
-                <IconComponent className={iconClass(item.href)} />
-              </a>
+              item.name === "Create" && onOpenCreateCapsule ? (
+                <button
+                  key={item.name}
+                  onClick={() => handleNavClick(item.href, item.name)}
+                  className={navLinkClass(item.href)}
+                  title={item.name}
+                  aria-label={item.name}
+                >
+                  <IconComponent className={iconClass(item.href)} />
+                </button>
+              ) : (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => handleNavClick(item.href, item.name)}
+                  className={navLinkClass(item.href)}
+                  title={item.name}
+                  aria-label={item.name}
+                >
+                  <IconComponent className={iconClass(item.href)} />
+                </Link>
+              )
             );
           })}
         </div>
@@ -146,22 +152,29 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
         <div className="flex justify-around items-center h-full max-w-lg mx-auto">
           {navItems.map((item) => {
             const IconComponent = item.icon;
-            const handleClick = (e: React.MouseEvent) => {
-              e.preventDefault();
-              setActivePath(item.href);
-              if (item.name === "Create" && onOpenCreateCapsule) onOpenCreateCapsule();
-            };
             return (
-              <a
-                key={item.name}
-                href={item.href}
-                onClick={handleClick}
-                className={navLinkClass(item.href)}
-                title={item.name}
-                aria-label={item.name}
-              >
-                <IconComponent className={iconClass(item.href)} />
-              </a>
+              item.name === "Create" && onOpenCreateCapsule ? (
+                <button
+                  key={item.name}
+                  onClick={() => handleNavClick(item.href, item.name)}
+                  className={navLinkClass(item.href)}
+                  title={item.name}
+                  aria-label={item.name}
+                >
+                  <IconComponent className={iconClass(item.href)} />
+                </button>
+              ) : (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => handleNavClick(item.href, item.name)}
+                  className={navLinkClass(item.href)}
+                  title={item.name}
+                  aria-label={item.name}
+                >
+                  <IconComponent className={iconClass(item.href)} />
+                </Link>
+              )
             );
           })}
         </div>
