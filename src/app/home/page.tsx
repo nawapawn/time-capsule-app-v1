@@ -1,95 +1,87 @@
+// src/app/home/page.tsx
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState, RefObject } from "react";
+import FeedCapsuleCard from "@/components/Home/FeedCapsuleCard";
+import PopularMemories from "@/components/Home/PopularMemories";
+import ShareButton from "@/components/Home/ShareButton";
+import { CapsuleType, moodOptions } from "@/utils/capsuleUtils";
 
-import FeedCapsuleCard from "@/components/FeedCapsuleCard";
-import PopularMemories from "@/components/PopularMemories";
-import ShareButton from "@/components/ShareButton"; 
-import {
-  CapsuleType,
-  generateCapsulesFromTitles,
-  popularMemoryTitles,
-  publicFeedTitles,
-} from "@/utils/capsuleUtils";
+interface RandomUser {
+  name: { first: string; last: string };
+  picture: { large: string };
+}
+
+interface Post {
+  id: number;
+  title: string;
+  body: string;
+}
 
 const HomePage: React.FC = () => {
-  const [feedType, setFeedType] = useState<"all" | "following">("all");
   const [feedData, setFeedData] = useState<CapsuleType[]>([]);
   const [popularCapsules, setPopularCapsules] = useState<CapsuleType[]>([]);
   const [shareCapsule, setShareCapsule] = useState<CapsuleType | null>(null);
-  const [shareAnchor, setShareAnchor] = useState<React.RefObject<HTMLButtonElement> | null>(null);
+  const [shareAnchor, setShareAnchor] = useState<RefObject<HTMLButtonElement | null> | null>(null);
 
-  React.useEffect(() => {
-    setPopularCapsules(generateCapsulesFromTitles(popularMemoryTitles));
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Random avatars
+        const usersRes = await fetch("https://randomuser.me/api/?results=20&inc=name,picture");
+        const usersData = await usersRes.json();
+        const users: RandomUser[] = usersData.results;
+
+        // Random post titles
+        const postsRes = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=20");
+        const posts: Post[] = await postsRes.json();
+
+        const capsules: CapsuleType[] = posts.map((p, i) => {
+          const user = users[i];
+          const mood = moodOptions[i % moodOptions.length];
+          return {
+            id: p.id,
+            title: p.title,
+            content: p.body,
+            creator: `${user.name.first} ${user.name.last}`,
+            creatorAvatar: user.picture.large,
+            imageSrc: `https://picsum.photos/seed/${p.id}/600/400`,
+            mood,
+            targetDate: new Date(Date.now() + (i + 1) * 86400000),
+            views: Math.floor(Math.random() * 9999) + 100,
+            bookmarked: false,
+          };
+        });
+
+        setFeedData(capsules);
+        setPopularCapsules(capsules.slice(0, 5));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchData();
   }, []);
 
-  React.useEffect(() => {
-    setFeedData(
-      feedType === "all"
-        ? generateCapsulesFromTitles(publicFeedTitles)
-        : []
-    );
-  }, [feedType]);
-
   const handleBookmark = (id: number) => {
-    setFeedData((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, bookmarked: !c.bookmarked } : c))
-    );
-    setPopularCapsules((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, bookmarked: !c.bookmarked } : c))
-    );
+    setFeedData(prev => prev.map(c => (c.id === id ? { ...c, bookmarked: !c.bookmarked } : c)));
+    setPopularCapsules(prev => prev.map(c => (c.id === id ? { ...c, bookmarked: !c.bookmarked } : c)));
   };
 
-  const handleShare = (capsule: CapsuleType, ref: React.RefObject<HTMLButtonElement>) => {
+  const handleShare = (capsule: CapsuleType, ref: RefObject<HTMLButtonElement | null>) => {
     setShareCapsule(capsule);
     setShareAnchor(ref);
-  };
-
-  // สำหรับ PopularMemories ที่ onShare รับแค่ 1 argument
-  const handlePopularMemoryShare = (capsule: CapsuleType) => {
-    setShareCapsule(capsule);
-    setShareAnchor(null);
   };
 
   return (
     <div className="min-h-[80vh] bg-white flex justify-center pt-16 px-4 pb-8 relative">
       <main className="w-full max-w-3xl flex flex-col gap-16 items-center">
-        <PopularMemories
-          popularCapsules={popularCapsules}
-          onBookmark={handleBookmark}
-          onShare={handlePopularMemoryShare} 
-        />
-
+        <PopularMemories popularCapsules={popularCapsules} onBookmark={handleBookmark} onShare={(c) => setShareCapsule(c)} />
         <section className="w-full">
-          <div className="flex justify-center gap-4 mb-8">
-            <button
-              onClick={() => setFeedType("all")}
-              className={`px-6 py-2 rounded-full font-semibold transition-colors shadow-md ${
-                feedType === "all"
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setFeedType("following")}
-              className={`px-6 py-2 rounded-full font-semibold transition-colors shadow-md ${
-                feedType === "following"
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
-              }`}
-            >
-              Following
-            </button>
-          </div>
-
           <div className="grid grid-cols-1 gap-6 justify-items-center">
             {feedData.map((c) => {
-              // 🔹 แก้ TypeScript ด้วย cast เป็น RefObject<HTMLButtonElement> แบบ non-null
-              const shareRef = React.createRef<HTMLButtonElement>() as React.RefObject<HTMLButtonElement>;
+              const shareRef: RefObject<HTMLButtonElement | null> = React.createRef<HTMLButtonElement>();
               return (
                 <FeedCapsuleCard
-                  key={`feed-${c.id}`}
+                  key={c.id}
                   capsule={c}
                   onBookmark={handleBookmark}
                   size="large"
@@ -103,10 +95,7 @@ const HomePage: React.FC = () => {
       </main>
 
       {shareCapsule && shareAnchor && (
-        <ShareButton
-          capsuleId={shareCapsule.id}
-          shareRef={shareAnchor}
-        />
+        <ShareButton capsuleId={shareCapsule.id} shareRef={shareAnchor} />
       )}
     </div>
   );
