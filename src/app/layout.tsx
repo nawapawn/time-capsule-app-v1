@@ -1,3 +1,4 @@
+// src/app/layout.tsx
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -16,12 +17,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <link 
-          rel="shortcut icon" 
-          href="/export-removebg-preview.png" 
-          sizes="64x64" 
-          type="image/png" 
-        />
+        {/* ใช้ไฟล์เดียวกับ favicon และ shortcut icon */}
+        <link rel="icon" href="/export-removebg-preview.png" type="image/png" />
+        <link rel="shortcut icon" href="/export-removebg-preview.png" type="image/png" />
+
+        {/* แนะนำเพิ่ม meta */}
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Time Capsule App</title>
       </head>
       <body>
         {shouldShowNavbar && (
