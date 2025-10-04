@@ -1,10 +1,10 @@
 // src/app/layout.tsx
 "use client";
-
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import CreateCapsuleForm from "@/components/CreateCapsuleForm";
 import { useState } from "react";
+import { CapsuleProvider } from "@/context/CapsuleContext";
 import "./globals.css";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -17,24 +17,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        {/* ใช้ไฟล์เดียวกับ favicon และ shortcut icon */}
         <link rel="icon" href="/export-removebg-preview.png" type="image/png" />
         <link rel="shortcut icon" href="/export-removebg-preview.png" type="image/png" />
-
-        {/* แนะนำเพิ่ม meta */}
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Time Capsule App</title>
+        <title>memory_capsule</title>
       </head>
       <body>
-        {shouldShowNavbar && (
-          <Navbar onOpenCreateCapsule={() => setShowCreateCapsule(true)} />
-        )}
+        <CapsuleProvider>
+          {shouldShowNavbar && (
+            <Navbar onOpenCreateCapsule={() => setShowCreateCapsule(true)} />
+          )}
 
-        {children}
+          {children}
 
-        {showCreateCapsule && (
-          <CreateCapsuleForm onClose={() => setShowCreateCapsule(false)} />
-        )}
+          {showCreateCapsule && (
+            <CreateCapsuleForm onClose={() => setShowCreateCapsule(false)} />
+          )}
+        </CapsuleProvider>
       </body>
     </html>
   );

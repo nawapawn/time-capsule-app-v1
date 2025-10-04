@@ -41,6 +41,13 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
+  const handleLogout = () => {
+    // ✅ Clear token/session ก่อน redirect
+    localStorage.clear();
+    setMenuOpen(false);
+    window.location.href = "/login"; // ไปหน้า login
+  };
+
   const navItems = [
     { name: "Home", icon: Home, href: "/home" },
     { name: "Search", icon: Search, href: "/search" },
@@ -52,7 +59,7 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
   const dropdownMenuItems = [
     { name: "Settings", icon: Settings, href: "/settings", isSeparator: true },
     { name: "Report Issue", icon: AlertCircle, href: "/report", isSeparator: true },
-    { name: "Log Out", icon: LogOut, href: "/logout", isDestructive: true, isSeparator: false },
+    { name: "Log Out", icon: LogOut, isDestructive: true, isSeparator: false },
   ];
 
   const navLinkClass = (href?: string) => `
@@ -182,7 +189,10 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
       {/* Dropdown Menu Overlay */}
       {menuOpen && (
         <>
-          <div className="fixed inset-0 bg-black/50 z-40" onClick={toggleMenu}></div>
+          <div
+            className="fixed inset-0 bg-black/50 z-40"
+            onClick={toggleMenu}
+          ></div>
           <div
             className="fixed top-14 right-4 md:top-auto md:bottom-6 md:left-20 
                           bg-white text-gray-800 p-4 rounded-xl shadow-2xl 
@@ -191,13 +201,22 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
             {dropdownMenuItems.map((item, index) => (
               <div
                 key={index}
-                className={`flex items-center gap-2 p-2 rounded ${
-                  item.isDestructive ? "text-red-500 hover:bg-red-100" : "hover:bg-gray-100"
+                onClick={
+                  item.name === "Log Out"
+                    ? handleLogout
+                    : () => setMenuOpen(false)
+                }
+                className={`flex items-center gap-2 p-2 rounded cursor-pointer ${
+                  item.isDestructive
+                    ? "text-red-500 hover:bg-red-100"
+                    : "hover:bg-gray-100"
                 }`}
               >
                 <item.icon className="w-5 h-5" />
-                <Link href={item.href}>{item.name}</Link>
-                {item.isSeparator && <hr className="my-1 border-gray-200" />}
+                {item.href ? <Link href={item.href}>{item.name}</Link> : item.name}
+                {item.isSeparator && (
+                  <hr className="my-1 border-gray-200 w-full" />
+                )}
               </div>
             ))}
           </div>

@@ -5,7 +5,7 @@ import { CapsuleType } from "@/utils/capsuleUtils";
 
 interface PopularMemoriesProps {
   popularCapsules: CapsuleType[];
-  onBookmark: (id: number) => void;
+  onBookmark: (capsule: CapsuleType) => void; // เปลี่ยนจาก id -> capsule
   onShare: (capsule: CapsuleType) => void;
 }
 
@@ -24,7 +24,7 @@ const PopularMemories: React.FC<PopularMemoriesProps> = ({
           <FeedCapsuleCard
             key={c.id}
             capsule={c}
-            onBookmark={onBookmark}
+            onBookmark={() => onBookmark(c)} // ส่ง object แทน id
             onShare={onShare}
             size="small"
             rank={index + 1}
@@ -32,14 +32,13 @@ const PopularMemories: React.FC<PopularMemoriesProps> = ({
         ))}
       </div>
 
-      {/* Custom Scrollbar Hiding */}
       <style jsx>{`
         .scrollbar-hide {
-          -ms-overflow-style: none; /* IE/Edge */
-          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
         .scrollbar-hide::-webkit-scrollbar {
-          display: none; /* Chrome/Safari */
+          display: none;
         }
       `}</style>
     </section>
