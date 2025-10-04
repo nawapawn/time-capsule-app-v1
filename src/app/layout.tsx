@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -7,11 +6,7 @@ import CreateCapsuleForm from "@/components/CreateCapsuleForm";
 import { useState } from "react";
 import "./globals.css";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [showCreateCapsule, setShowCreateCapsule] = useState(false);
 
@@ -21,23 +16,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link
-          rel="shortcut icon"
-          href="/export-removebg-preview.png"
-          sizes="64x64"
-          type="image/png"
+        <link 
+          rel="shortcut icon" 
+          href="/export-removebg-preview.png" 
+          sizes="64x64" 
+          type="image/png" 
         />
       </head>
       <body>
-        {/* Navbar */}
         {shouldShowNavbar && (
           <Navbar onOpenCreateCapsule={() => setShowCreateCapsule(true)} />
         )}
 
-        {/* Page Content */}
         {children}
 
-        {/* Create Capsule Modal */}
         {showCreateCapsule && (
           <CreateCapsuleForm onClose={() => setShowCreateCapsule(false)} />
         )}
