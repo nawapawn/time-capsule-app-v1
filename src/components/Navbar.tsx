@@ -1,3 +1,4 @@
+// src/components/Navbar.tsx
 "use client";
 import { useState } from "react";
 import Link from "next/link";
@@ -14,9 +15,11 @@ import {
   LogOut,
   Bell,
 } from "lucide-react";
+import ProfileAvatar from "./ProfileAvatar";
 
 interface NavbarProps {
   onOpenCreateCapsule?: () => void;
+  currentUser?: { name: string; avatar?: string }; // สำหรับ profile avatar
 }
 
 // --- Logo Component ---
@@ -34,7 +37,7 @@ const Logo = () => (
   </Link>
 );
 
-export const Navbar = ({ onOpenCreateCapsule }: NavbarProps) => {
+export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activePath, setActivePath] = useState("/home");
 
@@ -73,10 +76,11 @@ export const Navbar = ({ onOpenCreateCapsule }: NavbarProps) => {
       {/* Fixed Top Header */}
       <header className="fixed top-0 left-0 w-full h-14 z-40 flex items-center justify-between px-4 md:px-6 bg-white/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none">
         {/* MOBILE: Notification Bell */}
-        <div className="md:hidden">
+        <div className="md:hidden flex items-center gap-2">
           <button className={headerButtonClass} title="Notifications">
             <Bell className="w-6 h-6" />
           </button>
+          {currentUser && <ProfileAvatar src={currentUser.avatar} size={28} />}
         </div>
 
         {/* MOBILE: Logo */}
@@ -87,11 +91,12 @@ export const Navbar = ({ onOpenCreateCapsule }: NavbarProps) => {
         {/* DESKTOP: Placeholder */}
         <div className="hidden md:block"></div>
 
-        {/* DESKTOP: Notification Bell */}
-        <div className="hidden md:block">
+        {/* DESKTOP: Notification Bell + Avatar */}
+        <div className="hidden md:flex items-center gap-3">
           <button className={headerButtonClass} title="Notifications">
             <Bell className="w-6 h-6" />
           </button>
+          {currentUser && <ProfileAvatar src={currentUser.avatar} size={32} />}
         </div>
 
         {/* MOBILE: Hamburger Menu */}

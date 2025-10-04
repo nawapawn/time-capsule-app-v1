@@ -6,6 +6,7 @@ import { Eye, Bookmark, Share2, MessageCircle } from "lucide-react";
 import { CapsuleType, formatViews } from "@/utils/capsuleUtils";
 import CommentBox from "./CommentBox";
 import CommentList, { CommentType as CommentItemType } from "./CommentList";
+import ProfileAvatar from "../ProfileAvatar";
 
 interface Props {
   capsule: CapsuleType;
@@ -96,13 +97,7 @@ const FeedCapsuleCard: React.FC<Props> = ({ capsule, onBookmark, onShare, rank, 
 
         {/* โปรไฟล์ */}
         <div className="flex items-center gap-2 mt-1">
-          <Image
-            src={capsule.creatorAvatar || "/default_avatar.png"}
-            alt={capsule.creator}
-            width={avatarSize}
-            height={avatarSize}
-            className="rounded-full border border-gray-200 object-cover"
-          />
+          <ProfileAvatar src={capsule.creatorAvatar} size={avatarSize} />
           <span className="text-xs text-gray-700">@{capsule.creator}</span>
         </div>
 
