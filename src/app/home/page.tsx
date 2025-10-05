@@ -21,10 +21,12 @@ const HomePage: React.FC = () => {
   const [shareAnchor, setShareAnchor] =
     useState<RefObject<HTMLButtonElement | null> | null>(null);
   const [showCreateCapsuleForm, setShowCreateCapsuleForm] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         const usersRes = await fetch(
           `https://randomuser.me/api/?results=${posts.length}&inc=name,picture`
         );
@@ -53,6 +55,8 @@ const HomePage: React.FC = () => {
         );
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
@@ -97,19 +101,26 @@ const HomePage: React.FC = () => {
 
       <section className="w-full mt-4 flex justify-center">
         <div className="grid grid-cols-1 gap-6 w-full max-w-4xl">
-          {feedData.map((c) => {
-            const shareRef = React.createRef<HTMLButtonElement | null>();
-            return (
-              <FeedCapsuleCard
-                key={c.id}
-                capsule={{ ...c, bookmarked: isBookmarked(c.id) }}
-                onBookmark={() => toggleBookmark(c)}
-                size="large"
-                onShare={handleShare}
-                shareRef={shareRef}
-              />
-            );
-          })}
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-64 w-full rounded-xl bg-gray-200 dark:bg-neutral-700 animate-pulse"
+                />
+              ))
+            : feedData.map((c) => {
+                const shareRef = React.createRef<HTMLButtonElement | null>();
+                return (
+                  <FeedCapsuleCard
+                    key={c.id}
+                    capsule={{ ...c, bookmarked: isBookmarked(c.id) }}
+                    onBookmark={() => toggleBookmark(c)}
+                    size="large"
+                    onShare={handleShare}
+                    shareRef={shareRef}
+                  />
+                );
+              })}
         </div>
       </section>
 

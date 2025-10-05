@@ -1,13 +1,15 @@
 "use client";
+// ตรวจสอบให้แน่ใจว่า import path ถูกต้องตามโครงสร้างโปรเจกต์ของคุณ
 import React, { RefObject } from "react";
 import Navbar from "@/components/Navbar";
-import FeedCapsuleCard from "@/components/Home/FeedCapsuleCard";
-import { useCapsule } from "@/context/CapsuleContext";
-import ShareButton from "@/components/Home/ShareButton";
-import { CapsuleType } from "@/utils/capsuleUtils";
+import FeedCapsuleCard from "@/components/Home/FeedCapsuleCard"; // น่าจะต้องปรับ path
+import { useCapsule } from "@/context/CapsuleContext"; // ต้องมี CapsuleContext
+import ShareButton from "@/components/Home/ShareButton"; // น่าจะต้องปรับ path
+import { CapsuleType } from "@/utils/capsuleUtils"; // ต้องมี type
 import { motion } from "framer-motion";
 
-const SavedPage: React.FC = () => {
+// เปลี่ยนชื่อ Component จาก SavedPage เป็น Page
+const Page: React.FC = () => {
   const { savedData, toggleBookmark, isBookmarked } = useCapsule();
   const [shareCapsule, setShareCapsule] = React.useState<CapsuleType | null>(null);
   const [shareAnchor, setShareAnchor] = React.useState<RefObject<HTMLButtonElement | null> | null>(null);
@@ -19,6 +21,9 @@ const SavedPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 flex flex-col items-center pt-20 px-4 pb-8 transition-colors">
+      {/* หากคุณใช้ Navbar ใน Layout (src\app\layout.tsx) 
+        คุณอาจจะต้องลบ <Navbar /> ออกจากตรงนี้
+      */}
       <Navbar />
 
       <h1 className="text-3xl sm:text-4xl font-bold text-center mb-6 text-gray-900 dark:text-gray-100 transition-colors">
@@ -60,4 +65,4 @@ const SavedPage: React.FC = () => {
   );
 };
 
-export default SavedPage;
+export default Page; // Export Page แทน SavedPage
