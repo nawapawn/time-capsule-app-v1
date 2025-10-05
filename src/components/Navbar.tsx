@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -13,16 +13,16 @@ import {
   AlertCircle,
   LogOut,
   Bell,
+  X,
 } from "lucide-react";
 import ProfileAvatar from "./ProfileAvatar";
-
 interface NavbarProps {
   onOpenCreateCapsule?: () => void;
   currentUser?: { name: string; avatar?: string };
 }
 
 const Logo = () => (
-  <Link href="/home" className="cursor-pointer">
+  <Link href="/home" className="cursor-pointer" aria-label="Home">
     <div className="flex items-center justify-center">
       <Image
         src="/export-removebg-preview.png"
@@ -35,30 +35,212 @@ const Logo = () => (
   </Link>
 );
 
-export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
+interface Notification {
+  id: number;
+  title: string;
+  description: string;
+  href?: string;
+}
+
+interface NotificationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  notifications: Notification[];
+}
+
+const NotificationModal = ({
+  isOpen,
+  onClose,
+  notifications,
+}: NotificationModalProps) => {
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Overlay */}
+      <div
+        className="fixed inset-0 bg-black/50 z-40"
+        onClick={onClose}
+        aria-hidden="true"
+      ></div>
+
+      {/* Modal */}
+      <div
+        className="fixed top-1/2 left-1/2 z-50 w-11/12 max-w-md h-[80vh] bg-white rounded-xl shadow-2xl p-4 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 flex flex-col"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Notifications Modal"
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Notifications</h2>
+          <button
+            onClick={onClose}
+            className="p-1 rounded hover:bg-gray-100"
+            aria-label="Close Notifications Modal"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {notifications.length === 0 ? (
+          <p className="text-gray-500 text-center">No notifications</p>
+        ) : (
+          <div className="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar">
+            {notifications.map((n) =>
+              n.href ? (
+                <Link
+                  key={n.id}
+                  href={n.href}
+                  onClick={onClose}
+                  className="block bg-white p-3 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all"
+                >
+                  <p className="font-semibold text-gray-900">{n.title}</p>
+                  <p className="text-gray-600 text-sm">{n.description}</p>
+                </Link>
+              ) : (
+                <div
+                  key={n.id}
+                  className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer"
+                  onClick={onClose}
+                >
+                  <p className="font-semibold text-gray-900">{n.title}</p>
+                  <p className="text-gray-600 text-sm">{n.description}</p>
+                </div>
+              )
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
+const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [activePath, setActivePath] = useState("/home");
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // โหลด notification จาก localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("notifications");
+    if (stored) {
+      setNotifications(JSON.parse(stored));
+    } else {
+      const initial: Notification[] = [
+        {
+          id: Date.now(),
+          title: "Upcoming Capsule",
+          description:
+            "A capsule will open in a few days! Don't forget to open it together.",
+        },
+        {
+          id: Date.now() + 1,
+          title: "Friend's Capsule",
+          description:
+            "Your friend has scheduled a capsule opening. Join in soon!",
+        },
+        {
+          id: Date.now() + 2,
+          title: "New Comment",
+          description: "Someone commented on your capsule! Check it out.",
+        },
+      ];
+      setNotifications(initial);
+      localStorage.setItem("notifications", JSON.stringify(initial));
+    }
+  }, []);
+
+  // Mock real-time notifications เพิ่มแบบไม่ซ้ำ
+  useEffect(() => {
+    const possibleNotifications: Omit<Notification, "id">[] = [
+      {
+        title: "New Capsule Alert",
+        description: "A capsule is opening soon! Don't miss it.",
+      },
+      {
+        title: "Capsule Reminder",
+        description: "Remember to check your upcoming capsules this week!",
+      },
+      {
+        title: "Friend Joined",
+        description: "Your friend has joined a capsule opening. Get ready!",
+      },
+      {
+        title: "Weekly Update",
+        description: "New capsules are available for the week. Open them now!",
+      },
+      {
+        title: "Special Event",
+        description: "A special capsule event is coming soon. Be prepared!",
+      },
+      {
+        title: "Don't Forget",
+        description: "Check your scheduled capsules before they open!",
+      },
+      {
+        title: "Team Capsule",
+        description: "Your team has a capsule opening. Join together!",
+      },
+      {
+        title: "Milestone Alert",
+        description: "A capsule has reached a milestone. See what's inside!",
+      },
+      {
+        title: "New Comment",
+        description: "Someone commented on your capsule! Check it out.",
+      },
+      {
+        title: "Friend Commented",
+        description: "Your friend left a comment on a capsule you opened!",
+      },
+    ];
+
+    const interval = setInterval(() => {
+      const available = possibleNotifications.filter(
+        (p) => !notifications.some((n) => n.title === p.title)
+      );
+      if (available.length === 0) return;
+
+      const random = available[Math.floor(Math.random() * available.length)];
+      const newNotification: Notification = {
+        id: Date.now(),
+        ...random,
+        href: "/capsule/123",
+      };
+      const updated = [newNotification, ...notifications];
+      setNotifications(updated);
+      localStorage.setItem("notifications", JSON.stringify(updated));
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [notifications]);
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
+  const toggleModal = () => setModalOpen(!modalOpen);
 
   const handleLogout = () => {
-    // ✅ Clear token/session ก่อน redirect
     localStorage.clear();
     setMenuOpen(false);
-    window.location.href = "/login"; // ไปหน้า login
+    window.location.href = "/login";
   };
 
   const navItems = [
     { name: "Home", icon: Home, href: "/home" },
     { name: "Search", icon: Search, href: "/search" },
-    { name: "Create", icon: PlusCircle }, // ไม่มี href เพราะเป็น modal
+    { name: "Create", icon: PlusCircle },
     { name: "Saved", icon: Bookmark, href: "/saved" },
     { name: "Profile", icon: User, href: "/profile" },
   ];
 
   const dropdownMenuItems = [
     { name: "Settings", icon: Settings, href: "/settings", isSeparator: true },
-    { name: "Report Issue", icon: AlertCircle, href: "/report", isSeparator: true },
+    {
+      name: "Report Issue",
+      icon: AlertCircle,
+      href: "/report",
+      isSeparator: true,
+    },
     { name: "Log Out", icon: LogOut, isDestructive: true, isSeparator: false },
   ];
 
@@ -75,11 +257,11 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
   `;
 
   const headerButtonClass =
-    "p-2 rounded-full transition-colors duration-150 text-gray-500 hover:bg-gray-100 hover:text-black";
+    "p-2 rounded-full transition-colors duration-150 text-gray-500 hover:bg-gray-100 hover:text-black relative";
 
-  const handleNavClick = (item: typeof navItems[number]) => {
+  const handleNavClick = (item: (typeof navItems)[number]) => {
     if (item.name === "Create" && onOpenCreateCapsule) {
-      onOpenCreateCapsule(); // เปิด modal
+      onOpenCreateCapsule();
     } else if (item.href) {
       setActivePath(item.href);
     }
@@ -87,11 +269,20 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
 
   return (
     <>
-      {/* Fixed Top Header */}
+      {/* Header */}
       <header className="fixed top-0 left-0 w-full h-14 z-40 flex items-center justify-between px-4 md:px-6 bg-white/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none">
         <div className="md:hidden flex items-center gap-2">
-          <button className={headerButtonClass} title="Notifications">
+          <button
+            className={headerButtonClass}
+            aria-label="Notifications"
+            onClick={toggleModal}
+          >
             <Bell className="w-6 h-6" />
+            {notifications.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
+                {notifications.length}
+              </span>
+            )}
           </button>
           {currentUser && <ProfileAvatar src={currentUser.avatar} size={28} />}
         </div>
@@ -101,25 +292,37 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
         </div>
 
         <div className="hidden md:flex items-center gap-3 ml-auto">
-          <button className={headerButtonClass} title="Notifications">
+          <button
+            className={headerButtonClass}
+            aria-label="Notifications"
+            onClick={toggleModal}
+          >
             <Bell className="w-6 h-6" />
+            {notifications.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
+                {notifications.length}
+              </span>
+            )}
           </button>
           {currentUser && <ProfileAvatar src={currentUser.avatar} size={32} />}
         </div>
 
         <div className="md:hidden">
-          <button onClick={toggleMenu} className={headerButtonClass} title="Menu">
+          <button
+            onClick={toggleMenu}
+            className={headerButtonClass}
+            aria-label="Menu"
+          >
             <Menu className="w-6 h-6" />
           </button>
         </div>
       </header>
 
-      {/* Desktop Sidebar */}
+      {/* Sidebar */}
       <nav className="hidden md:flex flex-col fixed top-0 left-0 h-screen w-[70px] z-30 transition-transform duration-300">
         <div className="pt-4 pb-10 flex justify-center items-center">
           <Logo />
         </div>
-
         <div className="flex flex-col gap-10 items-center justify-center flex-1">
           {navItems.map((item) => {
             const IconComponent = item.icon;
@@ -128,7 +331,6 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
                 key={item.name}
                 onClick={() => handleNavClick(item)}
                 className={navLinkClass()}
-                title={item.name}
                 aria-label={item.name}
               >
                 <IconComponent className={iconClass()} />
@@ -139,7 +341,6 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
                 href={item.href || "#"}
                 onClick={() => handleNavClick(item)}
                 className={navLinkClass(item.href)}
-                title={item.name}
                 aria-label={item.name}
               >
                 <IconComponent className={iconClass(item.href)} />
@@ -147,15 +348,18 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
             );
           })}
         </div>
-
         <div className="mb-6 mx-auto text-gray-500">
-          <button onClick={toggleMenu} className={navLinkClass()} title="Menu">
+          <button
+            onClick={toggleMenu}
+            className={navLinkClass()}
+            aria-label="Menu"
+          >
             <Menu className="w-7 h-7" />
           </button>
         </div>
       </nav>
 
-      {/* Mobile Bottom Bar */}
+      {/* Mobile Bottom */}
       <nav className="fixed bottom-0 left-0 w-full h-14 z-40 md:hidden bg-white/50 backdrop-blur-sm">
         <div className="flex justify-around items-center h-full max-w-lg mx-auto">
           {navItems.map((item) => {
@@ -165,7 +369,6 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
                 key={item.name}
                 onClick={() => handleNavClick(item)}
                 className={navLinkClass()}
-                title={item.name}
                 aria-label={item.name}
               >
                 <IconComponent className={iconClass()} />
@@ -176,7 +379,6 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
                 href={item.href || "#"}
                 onClick={() => handleNavClick(item)}
                 className={navLinkClass(item.href)}
-                title={item.name}
                 aria-label={item.name}
               >
                 <IconComponent className={iconClass(item.href)} />
@@ -186,17 +388,17 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
         </div>
       </nav>
 
-      {/* Dropdown Menu Overlay */}
+      {/* Dropdown */}
       {menuOpen && (
         <>
           <div
             className="fixed inset-0 bg-black/50 z-40"
             onClick={toggleMenu}
+            aria-hidden="true"
           ></div>
           <div
-            className="fixed top-14 right-4 md:top-auto md:bottom-6 md:left-20 
-                          bg-white text-gray-800 p-4 rounded-xl shadow-2xl 
-                          flex flex-col gap-1 z-50 w-64 md:w-80 border border-gray-200"
+            className="fixed top-14 right-4 md:top-auto md:bottom-6 md:left-20 bg-white text-gray-800 p-4 rounded-xl shadow-2xl flex flex-col gap-1 z-50 w-64 md:w-80 border border-gray-200"
+            role="menu"
           >
             {dropdownMenuItems.map((item, index) => (
               <div
@@ -211,9 +413,14 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
                     ? "text-red-500 hover:bg-red-100"
                     : "hover:bg-gray-100"
                 }`}
+                role="menuitem"
               >
                 <item.icon className="w-5 h-5" />
-                {item.href ? <Link href={item.href}>{item.name}</Link> : item.name}
+                {item.href ? (
+                  <Link href={item.href}>{item.name}</Link>
+                ) : (
+                  item.name
+                )}
                 {item.isSeparator && (
                   <hr className="my-1 border-gray-200 w-full" />
                 )}
@@ -222,6 +429,13 @@ export const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
           </div>
         </>
       )}
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        notifications={notifications}
+      />
     </>
   );
 };
