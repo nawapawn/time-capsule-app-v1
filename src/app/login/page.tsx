@@ -45,88 +45,58 @@ export default function LoginPage() {
       {/* Left Panel (Desktop Only)     */}
       {/* ============================= */}
       <div className="hidden md:flex flex-col justify-center p-8 md:p-16 lg:p-24 text-gray-900">
-        <div className="max-w-xl">
-          {/* App Logo */}
+        <div className="max-w-xl text-center md:text-left">
+          {/* Animated & Lazy Loaded Image */}
           <Image
             src="/export-removebg-preview.png"
-            alt="App Logo"
-            width={96}
-            height={96}
-            className="w-24 h-24 mb-6"
+            alt="Memory Capsule Logo"
+            width={120}
+            height={120}
+            className="mx-auto md:mx-0 mb-6 animate-float"
+            loading="lazy" // Lazy loading
           />
-          {/* Title */}
           <h1 className="text-5xl font-extrabold mb-4 tracking-tight text-gray-900">
-            Monochrome Canvas
+            Memory Capsule
           </h1>
-          {/* Description */}
-          <p className="text-xl text-gray-700 mb-8">
-            Collaborative workspace for fast, secure prototyping, accessible
-            only with trusted accounts.
+          <p className="text-xl text-gray-700">
+            Sign in with Google & Apple. Countdown to open your capsule and discover moments worth waiting for. Share the excitement with a community feed and enjoy a new experience together.
           </p>
-          {/* Features List */}
-          <ul className="space-y-4 text-lg text-gray-700">
-            <li className="flex items-center">
-              <span className="mr-3 font-bold">✓</span> Live Code Editing &
-              Preview
-            </li>
-            <li className="flex items-center">
-              <span className="mr-3 font-bold">✓</span> Real-time Collaboration
-            </li>
-            <li className="flex items-center">
-              <span className="mr-3 font-bold">✓</span> Secure IDP Only Access
-              (Google & Apple)
-            </li>
-          </ul>
         </div>
       </div>
 
       {/* ============================= */}
       {/* Right Panel (Sign In Form)    */}
       {/* ============================= */}
-      <div className="flex flex-col md:justify-center items-start md:items-center flex-grow p-6 sm:p-12">
+      <div className="flex flex-col md:justify-center items-center flex-grow p-6 sm:p-12">
         <div className="w-full max-w-sm md:max-w-md">
-          {/* ============================= */}
-          {/* Mobile Logo + Title Section   */}
-          {/* ============================= */}
-          <div className="md:hidden flex flex-col justify-start items-center mt-4 p-4">
+          {/* Mobile Logo + Title Section */}
+          <div className="md:hidden flex flex-col justify-start items-center mt-0 mb-4 p-4">
             <Image
               src="/export-removebg-preview.png"
-              alt="App Logo"
+              alt="Memory Capsule Logo"
               width={80}
               height={80}
-              className="w-16 h-16 mb-2"
+              className="w-20 h-20 mb-2 animate-float"
+              loading="lazy"
             />
             <h1 className="text-3xl font-extrabold mb-2 tracking-tight text-gray-900">
-              Monochrome Canvas
+              Memory Capsule
             </h1>
             <p className="text-md text-gray-600 text-center">
-              Collaborative workspace for fast, secure prototyping, accessible
-              only with trusted accounts.
+              Sign in with Google & Apple. Countdown to open your capsule and discover moments worth waiting for. Share the excitement with a community feed and enjoy a new experience together.
             </p>
           </div>
 
-          {/* ============================= */}
-          {/* Sign In Card                  */}
-          {/* ============================= */}
-          <div className="p-8 sm:p-10 rounded-3xl w-full bg-transparent md:bg-white md:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.2)] md:border md:border-gray-100 mt-6 md:mt-0">
-            {/* Desktop Logo in Card */}
-            <div className="text-center mb-8">
-              <Image
-                src="/export-removebg-preview.png"
-                alt="App Logo"
-                width={80}
-                height={80}
-                className="hidden md:block mx-auto w-20 h-20 mb-2"
-              />
-              <h2 className="text-3xl font-bold text-gray-900 mt-4">Sign In</h2>
+          {/* Sign In Card */}
+          <div className="p-6 sm:p-10 rounded-3xl w-full bg-transparent md:bg-white md:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.2)] md:border md:border-gray-100">
+            <div className="text-center mb-6 md:mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mt-0 md:mt-0">Sign In</h2>
             </div>
 
-            {/* Sign In Instruction */}
-            <p className="text-center text-gray-500 mb-8">
-              Please sign in with a trusted account (Google or Apple).
+            <p className="text-center text-gray-500 mb-6">
+              Please sign in with a trusted account (Google or Apple)
             </p>
 
-            {/* Google Sign In Button */}
             <button
               onClick={() => handleSignIn("google")}
               disabled={loading}
@@ -148,8 +118,7 @@ export default function LoginPage() {
               )}
             </button>
 
-            {/* Divider */}
-            <div className="relative my-8">
+            <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
               </div>
@@ -160,7 +129,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Apple Sign In Button */}
             <button
               onClick={() => handleSignIn("apple")}
               disabled={loading}
@@ -182,7 +150,6 @@ export default function LoginPage() {
               )}
             </button>
 
-            {/* Error Message */}
             {error && (
               <div className="mt-6 p-3 bg-red-100 border border-red-400 rounded-xl">
                 <p className="text-red-700 text-sm font-medium">{error}</p>
@@ -191,6 +158,19 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      {/* ============================= */}
+      {/* Animation Keyframes Tailwind */}
+      {/* ============================= */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }
