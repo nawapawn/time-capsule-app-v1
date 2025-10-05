@@ -27,32 +27,21 @@ interface CreateCapsuleFormProps {
   onClose?: () => void;
 }
 
-export default function CreateCapsuleForm({
-  onCreate,
-  onClose,
-}: CreateCapsuleFormProps) {
+export default function CreateCapsuleForm({ onCreate, onClose }: CreateCapsuleFormProps) {
   const [isPrivate, setIsPrivate] = useState(true);
   const [mood, setMood] = useState<string>(moodOptions[0].name);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<CapsuleFormValues>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<CapsuleFormValues>({
     resolver: zodResolver(capsuleSchema),
   });
 
   const onSubmit = (data: CapsuleFormValues) => {
     setIsLoading(true);
-
     setTimeout(() => {
       setIsLoading(false);
-
-      const moodObject =
-        moodOptions.find((m) => m.name === mood) || moodOptions[0];
+      const moodObject = moodOptions.find((m) => m.name === mood) || moodOptions[0];
       const imageSrc = imageFile
         ? URL.createObjectURL(imageFile)
         : `https://picsum.photos/seed/${Date.now()}/600/400`;
@@ -71,7 +60,6 @@ export default function CreateCapsuleForm({
 
       onCreate?.(newCapsule);
       toast.success("Your Time Capsule has been created!");
-
       reset();
       setMood(moodOptions[0].name);
       setIsPrivate(true);
@@ -82,70 +70,51 @@ export default function CreateCapsuleForm({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"
       onClick={onClose}
     >
       <Toaster position="top-center" />
       <div
-        className="w-full max-w-lg sm:max-w-xl bg-white dark:bg-gray-900 rounded-2xl shadow-xl relative p-6"
+        className="w-full max-w-lg bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-8 flex flex-col gap-5 transition-all"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-semibold text-center mb-4 text-gray-800 dark:text-gray-100">
-          What&apos;s happening?
+        <h2 className="text-xl font-semibold text-center text-neutral-800 dark:text-neutral-100">
+          Create Capsule
         </h2>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-4"
-          noValidate
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
           {/* Title */}
-          <label htmlFor="capsule-title" className="sr-only">
-            Capsule Title
-          </label>
           <input
             {...register("title")}
-            id="capsule-title"
-            placeholder="Capsule title..."
-            className="w-full p-2 border-b border-gray-300 dark:border-gray-700 bg-transparent rounded-md"
+            placeholder="Title"
+            className="w-full p-3 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:ring-1 focus:ring-neutral-400 focus:outline-none"
           />
-          {errors.title && (
-            <p className="text-xs text-red-500">{errors.title.message}</p>
-          )}
+          {errors.title && <p className="text-xs text-red-500">{errors.title.message}</p>}
 
           {/* Content */}
-          <label htmlFor="capsule-content" className="sr-only">
-            Capsule Message
-          </label>
           <textarea
             {...register("content")}
-            id="capsule-content"
-            rows={3}
+            rows={4}
+            placeholder="Write something meaningful..."
             maxLength={1000}
-            placeholder="Write your message..."
-            className="w-full p-2 border-b border-gray-300 dark:border-gray-700 bg-transparent rounded-md resize-none"
+            className="w-full p-3 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:ring-1 focus:ring-neutral-400 focus:outline-none resize-none"
           />
-          {errors.content && (
-            <p className="text-xs text-red-500">{errors.content.message}</p>
-          )}
+          {errors.content && <p className="text-xs text-red-500">{errors.content.message}</p>}
 
           {/* Toolbar */}
-          <CapsuleToolbar
-            isPrivate={isPrivate}
-            onPrivacyToggle={setIsPrivate}
-          />
+          <CapsuleToolbar isPrivate={isPrivate} onPrivacyToggle={setIsPrivate} />
 
-          {/* Mood selection */}
-          <div className="flex flex-wrap gap-2 mt-2">
+          {/* Mood */}
+          <div className="flex flex-wrap gap-2 mt-1">
             {moodOptions.map((m) => (
               <button
                 key={m.name}
                 type="button"
                 onClick={() => setMood(m.name)}
-                className={`px-3 py-2 rounded-md font-semibold text-sm ${
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   mood === m.name
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                    ? "bg-neutral-800 text-white dark:bg-white dark:text-neutral-900"
+                    : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700"
                 }`}
               >
                 {m.emoji} {m.name}
@@ -153,45 +122,35 @@ export default function CreateCapsuleForm({
             ))}
           </div>
 
-          {/* Open date */}
-          <label htmlFor="capsule-date" className="sr-only">
-            Open Date
-          </label>
+          {/* Open Date */}
           <input
             {...register("openDate")}
-            id="capsule-date"
             type="datetime-local"
-            className="w-full p-2 border rounded-md bg-transparent mt-2"
+            className="w-full p-3 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:ring-1 focus:ring-neutral-400 focus:outline-none"
           />
-          {errors.openDate && (
-            <p className="text-xs text-red-500">{errors.openDate.message}</p>
-          )}
+          {errors.openDate && <p className="text-xs text-red-500">{errors.openDate.message}</p>}
 
-          {/* Image upload with lucide icon and accessible label */}
-          <div className="mt-2 flex items-center gap-4">
+          {/* Image Upload */}
+          <div className="flex items-center gap-3 mt-2">
             <label
               htmlFor="capsule-image"
-              className="flex items-center justify-center w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="flex items-center justify-center w-10 h-10 bg-neutral-100 dark:bg-neutral-800 rounded-lg cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
             >
-              <ImgIcon className="w-6 h-6 text-gray-500 hover:text-blue-600" />
+              <ImgIcon className="w-5 h-5 text-neutral-500" />
               <span className="sr-only">Attach an image</span>
             </label>
-
             <input
               id="capsule-image"
               type="file"
               accept="image/*"
               className="hidden"
-              aria-label="Attach an image"
               onChange={(e) => setImageFile(e.target.files?.[0] || null)}
             />
-
-            {/* Preview */}
             {imageFile && (
-              <div className="w-32 h-32 relative rounded-md overflow-hidden">
+              <div className="w-24 h-24 relative rounded-lg overflow-hidden">
                 <Image
                   src={URL.createObjectURL(imageFile)}
-                  alt="Preview of uploaded image"
+                  alt="Preview"
                   fill
                   style={{ objectFit: "cover" }}
                 />
@@ -202,14 +161,10 @@ export default function CreateCapsuleForm({
           {/* Submit */}
           <button
             type="submit"
-            className="w-full flex justify-center items-center gap-2 px-4 py-2 rounded-xl bg-black text-white font-semibold mt-4"
+            className="w-full flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-medium hover:opacity-90 transition"
           >
-            {isLoading ? (
-              <Loader2 className="animate-spin w-5 h-5" />
-            ) : (
-              <Send className="w-5 h-5" />
-            )}
-            Create Capsule
+            {isLoading ? <Loader2 className="animate-spin w-5 h-5" /> : <Send className="w-5 h-5" />}
+            Create
           </button>
         </form>
       </div>
