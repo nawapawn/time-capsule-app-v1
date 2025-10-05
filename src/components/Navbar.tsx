@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import ProfileAvatar from "./ProfileAvatar";
+
 interface NavbarProps {
   onOpenCreateCapsule?: () => void;
   currentUser?: { name: string; avatar?: string };
@@ -52,70 +53,65 @@ const NotificationModal = ({
   isOpen,
   onClose,
   notifications,
-}: NotificationModalProps) => {
-  return (
-    <>
-      {/* Overlay */}
-      <div
-        className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={onClose}
-        aria-hidden="true"
-      ></div>
+}: NotificationModalProps) => (
+  <>
+    <div
+      className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
+        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`}
+      onClick={onClose}
+      aria-hidden="true"
+    ></div>
 
-      {/* Modal */}
-      <div
-        className={`fixed top-1/2 left-1/2 z-50 w-11/12 max-w-md h-[80vh] bg-white rounded-xl shadow-2xl p-4 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 flex flex-col
-          ${
-            isOpen
-              ? "opacity-100 scale-100"
-              : "opacity-0 scale-95 pointer-events-none"
-          }`}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Notifications Modal"
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Notifications</h2>
-          <button
-            onClick={onClose}
-            className="p-1 rounded hover:bg-gray-100 transition"
-            aria-label="Close Notifications Modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {notifications.length === 0 ? (
-          <p className="text-gray-500 text-center mt-10">No notifications</p>
-        ) : (
-          <div className="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar">
-            {notifications.map((n) => (
-              <div
-                key={n.id}
-                className="notification-item bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-pointer hover:scale-105 hover:shadow-md"
-                onClick={onClose}
-              >
-                {n.href ? (
-                  <Link href={n.href}>
-                    <p className="font-semibold text-gray-900">{n.title}</p>
-                    <p className="text-gray-600 text-sm">{n.description}</p>
-                  </Link>
-                ) : (
-                  <>
-                    <p className="font-semibold text-gray-900">{n.title}</p>
-                    <p className="text-gray-600 text-sm">{n.description}</p>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+    <div
+      className={`fixed top-1/2 left-1/2 z-50 w-11/12 max-w-md h-[80vh] bg-white rounded-xl shadow-2xl p-4 flex flex-col transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
+        isOpen
+          ? "opacity-100 scale-100"
+          : "opacity-0 scale-95 pointer-events-none"
+      }`}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Notifications Modal"
+    >
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">Notifications</h2>
+        <button
+          onClick={onClose}
+          className="p-1 rounded hover:bg-gray-100 transition"
+          aria-label="Close Notifications Modal"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
-    </>
-  );
-};
+
+      {notifications.length === 0 ? (
+        <p className="text-gray-500 text-center mt-10">No notifications</p>
+      ) : (
+        <div className="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar">
+          {notifications.map((n) => (
+            <div
+              key={n.id}
+              className="notification-item bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-pointer hover:scale-105 hover:shadow-md"
+              onClick={onClose}
+            >
+              {n.href ? (
+                <Link href={n.href}>
+                  <p className="font-semibold text-gray-900">{n.title}</p>
+                  <p className="text-gray-600 text-sm">{n.description}</p>
+                </Link>
+              ) : (
+                <>
+                  <p className="font-semibold text-gray-900">{n.title}</p>
+                  <p className="text-gray-600 text-sm">{n.description}</p>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </>
+);
 
 const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -123,12 +119,10 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
   const [activePath, setActivePath] = useState("/home");
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // โหลด notification จาก localStorage
   useEffect(() => {
     const stored = localStorage.getItem("notifications");
-    if (stored) {
-      setNotifications(JSON.parse(stored));
-    } else {
+    if (stored) setNotifications(JSON.parse(stored));
+    else {
       const initial: Notification[] = [
         {
           id: Date.now(),
@@ -153,7 +147,6 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
     }
   }, []);
 
-  // Mock real-time notifications เพิ่มแบบไม่ซ้ำ
   useEffect(() => {
     const possibleNotifications: Omit<Notification, "id">[] = [
       {
@@ -202,7 +195,7 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
       const available = possibleNotifications.filter(
         (p) => !notifications.some((n) => n.title === p.title)
       );
-      if (available.length === 0) return;
+      if (!available.length) return;
 
       const random = available[Math.floor(Math.random() * available.length)];
       const newNotification: Notification = {
@@ -236,15 +229,9 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
   ];
 
   const dropdownMenuItems = [
-    { name: "Settings", icon: Settings, href: "/settings", isSeparator: true },
-    {
-      name: "Report Issue",
-      icon: AlertCircle,
-      href: "/report",
-      isSeparator: true,
-    },
-    { name: "Log Out", icon: LogOut, isDestructive: true, isSeparator: false },
-    { name: "Help", icon: AlertCircle, href: "/help", isSeparator: false }, // เมนูใหม่
+    { name: "Settings", icon: Settings, href: "/settings" },
+    { name: "Report Issue", icon: AlertCircle, href: "/report" },
+    { name: "Log Out", icon: LogOut, isDestructive: true },
   ];
 
   const navLinkClass = (href?: string) => `
@@ -263,11 +250,8 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
     "p-2 rounded-full transition-colors duration-150 text-gray-500 hover:bg-gray-100 hover:text-black relative";
 
   const handleNavClick = (item: (typeof navItems)[number]) => {
-    if (item.name === "Create" && onOpenCreateCapsule) {
-      onOpenCreateCapsule();
-    } else if (item.href) {
-      setActivePath(item.href);
-    }
+    if (item.name === "Create" && onOpenCreateCapsule) onOpenCreateCapsule();
+    else if (item.href) setActivePath(item.href);
   };
 
   return (
@@ -320,7 +304,6 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
           </button>
         </div>
       </header>
-
       {/* Sidebar */}
       <nav className="hidden md:flex flex-col fixed top-0 left-0 h-screen w-[70px] z-30 transition-transform duration-300">
         <div className="pt-4 pb-10 flex justify-center items-center">
@@ -361,7 +344,6 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
           </button>
         </div>
       </nav>
-
       {/* Mobile Bottom */}
       <nav className="fixed bottom-0 left-0 w-full h-14 z-40 md:hidden bg-white/50 backdrop-blur-sm">
         <div className="flex justify-around items-center h-full max-w-lg mx-auto">
@@ -390,59 +372,73 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
           })}
         </div>
       </nav>
+      {/* Dropdown */}{" "}
+      <div
+        className={`fixed top-14 right-4 md:top-auto md:bottom-6 md:left-20 z-50 w-64 md:w-80 transform transition-all duration-300 ${
+          menuOpen
+            ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
+            : "opacity-0 -translate-y-4 scale-95 pointer-events-none"
+        }`} // Add role="menu" to the main dropdown container
+        role="menu"
+        aria-orientation="vertical" // Recommended for menu
+      >
+        {" "}
+        <div className="bg-white text-gray-800 p-4 rounded-xl shadow-2xl flex flex-col gap-1 border border-gray-200">
+          {" "}
+          {dropdownMenuItems.map((item, index) => {
+            const handleClick = () => {
+              if (item.name === "Log Out") {
+                handleLogout();
+              } else {
+                setMenuOpen(false); // For Settings/Report, rely on the Link or programmatic navigation
+              }
+            };
 
-      {/* Dropdown */}
-      {menuOpen && (
-        <>
-          {/* Overlay */}
-          <div
-            className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
-              menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
-            onClick={toggleMenu}
-            aria-hidden="true"
-          ></div>
-
-          {/* Dropdown Menu */}
-          <div
-            className={`fixed top-14 right-4 md:top-auto md:bottom-6 md:left-20 bg-white text-gray-800 p-4 rounded-xl shadow-2xl flex flex-col gap-1 z-50 w-64 md:w-80 border border-gray-200 transform transition-all duration-300
-    ${
-      menuOpen
-        ? "opacity-100 scale-100 translate-y-0"
-        : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
-    }`}
-            role="menu"
-          >
-            {dropdownMenuItems.map((item, index) => (
-              <div
-                key={index}
-                onClick={
-                  item.name === "Log Out"
-                    ? handleLogout
-                    : () => setMenuOpen(false)
-                }
-                className={`
-        flex items-center gap-3 p-3 rounded-lg cursor-pointer transform transition-all duration-200
-        ${
-          item.isDestructive
-            ? "text-red-500 hover:bg-red-100 hover:scale-105"
-            : "text-gray-700 hover:bg-gray-100 hover:scale-105"
-        }
-      `}
-                role="menuitem"
-              >
-                <item.icon className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
-                <Link href={item.href || "#"} className="flex-1">
-                  {item.name}
-                </Link>
-                {item.isSeparator && (
-                  <hr className="my-1 border-gray-200 w-full" />
-                )}
+            return (
+              // Use a wrapper div with role="none" if necessary, but the menuitem should be the actionable element.
+              // Here, we use a single clickable button/Link for the entire item to simplify ARIA.
+              <div key={index} role="none">
+                {" "}
+                {/* Use a button for the Log Out action, or a Link for navigation */}{" "}
+                {item.href ? (
+                  <Link
+                    href={item.href}
+                    onClick={handleClick}
+                    className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
+                      item.isDestructive
+                        ? "text-red-500 hover:bg-red-100"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                    role="menuitem" // Link is a direct descendant of the element with role="menu"
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {item.name}{" "}
+                  </Link>
+                ) : (
+                  <button
+                    onClick={handleClick}
+                    className={`flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-200 text-left ${
+                      item.isDestructive
+                        ? "text-red-500 hover:bg-red-100"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                    role="menuitem" // Button is a direct descendant of the element with role="menu"
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {item.name}{" "}
+                  </button>
+                )}{" "}
+                {index < dropdownMenuItems.length - 1 && (
+                  <hr
+                    className="border-t border-gray-200 mt-1"
+                    role="separator"
+                  /> // Added role="separator"
+                )}{" "}
               </div>
-            ))}
-          </div>
-        </>
-      )}
+            );
+          })}{" "}
+        </div>{" "}
+      </div>
       {/* Notification Modal */}
       <NotificationModal
         isOpen={modalOpen}
