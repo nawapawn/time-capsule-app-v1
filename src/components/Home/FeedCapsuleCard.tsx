@@ -1,12 +1,13 @@
 "use client";
-import React, { useState, useEffect, RefObject } from "react";
-import Image from "next/image";
+import React, { useState, useEffect, RefObject, Suspense } from "react";
 import { Eye, Bookmark, Share2, MessageCircle } from "lucide-react";
 import { CapsuleType, formatViews } from "@/utils/capsuleUtils";
 import CommentBox from "./CommentBox";
 import CommentList, { CommentType as CommentItemType } from "./CommentList";
 import ProfileAvatar from "../ProfileAvatar";
+import Image from "next/image";
 
+// Lazy load FeedCapsuleCard images with Suspense
 interface Props {
   capsule: CapsuleType;
   onBookmark: (capsule: CapsuleType) => void;
@@ -35,7 +36,7 @@ const FeedCapsuleCard: React.FC<Props> = ({
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-      const targetDate = new Date(capsule.targetDate); // แปลงเป็น Date
+      const targetDate = new Date(capsule.targetDate);
       const diff = targetDate.getTime() - now.getTime();
       if (diff <= 0) setCountdown("Opened!");
       else {
@@ -107,17 +108,17 @@ const FeedCapsuleCard: React.FC<Props> = ({
       )}
 
       <div className="relative w-full aspect-video bg-gray-100">
-        {capsule.imageSrc ? (
-          <Image
-            src={capsule.imageSrc}
-            alt={capsule.title}
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <div className="flex flex-col items-center justify-center w-full h-full text-gray-400">
-            <span>No Image</span>
-          </div>
+        {capsule.imageSrc && (
+          <Suspense fallback={<div className="flex items-center justify-center w-full h-full text-gray-400">Loading...</div>}>
+            <Image
+              src={capsule.imageSrc}
+              alt={capsule.title}
+              fill
+              style={{ objectFit: "cover" }}
+              loading="lazy"
+              className="transition-all duration-500 ease-in-out hover:scale-105"
+            />
+          </Suspense>
         )}
       </div>
 
@@ -139,12 +140,11 @@ const FeedCapsuleCard: React.FC<Props> = ({
             <Eye className={`h-${iconSize} w-${iconSize}`} /> {formatViews(capsule.views)}
           </span>
 
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <button
               onClick={handleBookmarkClick}
               className="flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 hover:bg-blue-100 active:scale-110"
               aria-label={capsule.bookmarked ? "Saved" : "Bookmark"}
-              title={capsule.bookmarked ? "Saved" : "Save"}
             >
               <Bookmark
                 className={`h-6 w-6 transition-colors duration-200 ${
@@ -158,7 +158,6 @@ const FeedCapsuleCard: React.FC<Props> = ({
               ref={shareRef ?? undefined}
               className="flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 hover:bg-blue-100 active:scale-110"
               aria-label="Share"
-              title="Share"
             >
               <Share2 className={`h-${iconSize} w-${iconSize} text-gray-400`} />
             </button>
@@ -167,11 +166,8 @@ const FeedCapsuleCard: React.FC<Props> = ({
               onClick={() => setShowComments((prev) => !prev)}
               className="flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 hover:bg-blue-100 active:scale-110 relative"
               aria-label="Comments"
-              title="Comments"
             >
-              <MessageCircle
-                className={`h-${iconSize} w-${iconSize} text-gray-400`}
-              />
+              <MessageCircle className={`h-${iconSize} w-${iconSize} text-gray-400`} />
               <span className="absolute -right-1 -top-1 text-xs text-gray-500">
                 {comments.length}
               </span>

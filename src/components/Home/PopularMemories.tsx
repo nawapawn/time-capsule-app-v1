@@ -2,10 +2,11 @@
 import React from "react";
 import FeedCapsuleCard from "./FeedCapsuleCard";
 import { CapsuleType } from "@/utils/capsuleUtils";
+import { motion } from "framer-motion";
 
 interface PopularMemoriesProps {
   popularCapsules: CapsuleType[];
-  onBookmark: (capsule: CapsuleType) => void; // เปลี่ยนจาก id -> capsule
+  onBookmark: (capsule: CapsuleType) => void;
   onShare: (capsule: CapsuleType) => void;
 }
 
@@ -15,20 +16,27 @@ const PopularMemories: React.FC<PopularMemoriesProps> = ({
   onShare,
 }) => {
   return (
-    <section className="w-full">
-      <h2 className="text-3xl font-bold mb-4 text-gray-900">
+    <section className="w-full px-2 sm:px-4 md:px-6">
+      <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-gray-900 dark:text-gray-100">
         Popular Memories
       </h2>
-      <div className="flex gap-6 py-4 px-2 overflow-x-auto scrollbar-hide">
+      <div className="flex gap-4 sm:gap-6 py-3 sm:py-4 overflow-x-auto scrollbar-hide">
         {popularCapsules.map((c, index) => (
-          <FeedCapsuleCard
+          <motion.div
             key={c.id}
-            capsule={c}
-            onBookmark={() => onBookmark(c)} // ส่ง object แทน id
-            onShare={onShare}
-            size="small"
-            rank={index + 1}
-          />
+            whileHover={{ scale: 1.05, y: -5 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="flex-shrink-0 w-48 sm:w-56 md:w-64 h-72 sm:h-80" // responsive ขนาดการ์ด
+          >
+            <FeedCapsuleCard
+              capsule={c}
+              onBookmark={() => onBookmark(c)}
+              onShare={() => onShare(c)}
+              size="small"
+              rank={index + 1}
+            />
+          </motion.div>
         ))}
       </div>
 

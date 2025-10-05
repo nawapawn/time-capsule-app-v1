@@ -53,20 +53,25 @@ const NotificationModal = ({
   onClose,
   notifications,
 }: NotificationModalProps) => {
-  if (!isOpen) return null;
-
   return (
     <>
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black/50 z-40"
+        className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
         onClick={onClose}
         aria-hidden="true"
       ></div>
 
       {/* Modal */}
       <div
-        className="fixed top-1/2 left-1/2 z-50 w-11/12 max-w-md h-[80vh] bg-white rounded-xl shadow-2xl p-4 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 flex flex-col"
+        className={`fixed top-1/2 left-1/2 z-50 w-11/12 max-w-md h-[80vh] bg-white rounded-xl shadow-2xl p-4 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 flex flex-col
+          ${
+            isOpen
+              ? "opacity-100 scale-100"
+              : "opacity-0 scale-95 pointer-events-none"
+          }`}
         role="dialog"
         aria-modal="true"
         aria-label="Notifications Modal"
@@ -75,7 +80,7 @@ const NotificationModal = ({
           <h2 className="text-lg font-semibold">Notifications</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-gray-100"
+            className="p-1 rounded hover:bg-gray-100 transition"
             aria-label="Close Notifications Modal"
           >
             <X className="w-5 h-5" />
@@ -83,31 +88,28 @@ const NotificationModal = ({
         </div>
 
         {notifications.length === 0 ? (
-          <p className="text-gray-500 text-center">No notifications</p>
+          <p className="text-gray-500 text-center mt-10">No notifications</p>
         ) : (
           <div className="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar">
-            {notifications.map((n) =>
-              n.href ? (
-                <Link
-                  key={n.id}
-                  href={n.href}
-                  onClick={onClose}
-                  className="block bg-white p-3 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all"
-                >
-                  <p className="font-semibold text-gray-900">{n.title}</p>
-                  <p className="text-gray-600 text-sm">{n.description}</p>
-                </Link>
-              ) : (
-                <div
-                  key={n.id}
-                  className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer"
-                  onClick={onClose}
-                >
-                  <p className="font-semibold text-gray-900">{n.title}</p>
-                  <p className="text-gray-600 text-sm">{n.description}</p>
-                </div>
-              )
-            )}
+            {notifications.map((n) => (
+              <div
+                key={n.id}
+                className="notification-item bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-pointer hover:scale-105 hover:shadow-md"
+                onClick={onClose}
+              >
+                {n.href ? (
+                  <Link href={n.href}>
+                    <p className="font-semibold text-gray-900">{n.title}</p>
+                    <p className="text-gray-600 text-sm">{n.description}</p>
+                  </Link>
+                ) : (
+                  <>
+                    <p className="font-semibold text-gray-900">{n.title}</p>
+                    <p className="text-gray-600 text-sm">{n.description}</p>
+                  </>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -242,6 +244,7 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
       isSeparator: true,
     },
     { name: "Log Out", icon: LogOut, isDestructive: true, isSeparator: false },
+    { name: "Help", icon: AlertCircle, href: "/help", isSeparator: false }, // เมนูใหม่
   ];
 
   const navLinkClass = (href?: string) => `
@@ -391,13 +394,23 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
       {/* Dropdown */}
       {menuOpen && (
         <>
+          {/* Overlay */}
           <div
-            className="fixed inset-0 bg-black/50 z-40"
+            className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
+              menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
             onClick={toggleMenu}
             aria-hidden="true"
           ></div>
+
+          {/* Dropdown Menu */}
           <div
-            className="fixed top-14 right-4 md:top-auto md:bottom-6 md:left-20 bg-white text-gray-800 p-4 rounded-xl shadow-2xl flex flex-col gap-1 z-50 w-64 md:w-80 border border-gray-200"
+            className={`fixed top-14 right-4 md:top-auto md:bottom-6 md:left-20 bg-white text-gray-800 p-4 rounded-xl shadow-2xl flex flex-col gap-1 z-50 w-64 md:w-80 border border-gray-200 transform transition-all duration-300
+    ${
+      menuOpen
+        ? "opacity-100 scale-100 translate-y-0"
+        : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+    }`}
             role="menu"
           >
             {dropdownMenuItems.map((item, index) => (
@@ -408,19 +421,20 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
                     ? handleLogout
                     : () => setMenuOpen(false)
                 }
-                className={`flex items-center gap-2 p-2 rounded cursor-pointer ${
-                  item.isDestructive
-                    ? "text-red-500 hover:bg-red-100"
-                    : "hover:bg-gray-100"
-                }`}
+                className={`
+        flex items-center gap-3 p-3 rounded-lg cursor-pointer transform transition-all duration-200
+        ${
+          item.isDestructive
+            ? "text-red-500 hover:bg-red-100 hover:scale-105"
+            : "text-gray-700 hover:bg-gray-100 hover:scale-105"
+        }
+      `}
                 role="menuitem"
               >
-                <item.icon className="w-5 h-5" />
-                {item.href ? (
-                  <Link href={item.href}>{item.name}</Link>
-                ) : (
-                  item.name
-                )}
+                <item.icon className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
+                <Link href={item.href || "#"} className="flex-1">
+                  {item.name}
+                </Link>
                 {item.isSeparator && (
                   <hr className="my-1 border-gray-200 w-full" />
                 )}
@@ -429,7 +443,6 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
           </div>
         </>
       )}
-
       {/* Notification Modal */}
       <NotificationModal
         isOpen={modalOpen}

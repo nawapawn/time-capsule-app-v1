@@ -5,6 +5,7 @@ import { CapsuleType, moodOptions } from "@/utils/capsuleUtils";
 import { posts } from "@/data/posts";
 import ShareButton from "@/components/Home/ShareButton";
 import { useCapsule } from "@/context/CapsuleContext";
+import { motion } from "framer-motion";
 
 interface RandomUser {
   name: { first: string; last: string };
@@ -66,8 +67,10 @@ const SearchPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 pt-20 flex flex-col items-center">
-      <h1 className="text-3xl font-bold text-center mb-6">Search Capsules</h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 p-4 pt-20 flex flex-col items-center transition-colors">
+      <h1 className="text-3xl sm:text-4xl font-bold text-center mb-6 text-gray-900 dark:text-gray-100 transition-colors">
+        Search Capsules
+      </h1>
 
       <div className="w-full max-w-xl mb-6">
         <input
@@ -75,29 +78,35 @@ const SearchPage: React.FC = () => {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by title or creator..."
-          className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-3 rounded-xl border border-gray-300 dark:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:text-neutral-100 transition-colors"
         />
       </div>
 
-      {loading && <p className="text-gray-500 mb-4">Loading...</p>}
+      {loading && <p className="text-gray-500 dark:text-gray-400 mb-4 transition-colors">Loading...</p>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 w-full max-w-5xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 w-full max-w-6xl">
         {filteredResults.length > 0
           ? filteredResults.map((c) => {
               const shareRef = React.createRef<HTMLButtonElement | null>();
               return (
-                <FeedCapsuleCard
+                <motion.div
                   key={c.id}
-                  capsule={{ ...c, bookmarked: isBookmarked(c.id) }}
-                  onBookmark={() => toggleBookmark(c)}
-                  onShare={handleShare}
-                  shareRef={shareRef}
-                  size="large"
-                />
+                  whileHover={{ scale: 1.03, y: -5 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <FeedCapsuleCard
+                    capsule={{ ...c, bookmarked: isBookmarked(c.id) }}
+                    onBookmark={() => toggleBookmark(c)}
+                    onShare={handleShare}
+                    shareRef={shareRef}
+                    size="large"
+                  />
+                </motion.div>
               );
             })
           : !loading && (
-              <p className="text-center text-gray-400 col-span-full">
+              <p className="text-center text-gray-400 dark:text-gray-500 col-span-full transition-colors">
                 No results found.
               </p>
             )}
