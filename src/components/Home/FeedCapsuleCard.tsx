@@ -87,7 +87,7 @@ const FeedCapsuleCard: React.FC<Props> = ({
   const iconSize = isSmall ? 5 : 6;
   const avatarUrl =
     capsule.creatorAvatar ||
-    `https://i.pravatar.cc/150?img=${((capsule.id * 13) % 70) + 1}`;
+    `https://i.pravatar.cc/150?img=${((Number(capsule.id) * 13) % 70) + 1}`;
 
   return (
     <div

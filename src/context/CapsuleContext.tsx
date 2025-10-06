@@ -45,7 +45,7 @@ export const CapsuleProvider: React.FC<{ children: ReactNode }> = ({ children })
     );
   };
 
-  const isBookmarked = (id: number) => savedData.some((c) => c.id === id);
+  const isBookmarked = (id: number) => savedData.some((c) => c.id === id.toString());
 
   return (
     <CapsuleContext.Provider

@@ -1,7 +1,5 @@
-// src/lib/mockData.ts
 import { Capsule } from "@/types";
 
-// ใช้ Date.now() เป็นจุดอ้างอิง
 const now = Date.now();
 const oneYear = 365 * 24 * 60 * 60 * 1000;
 
@@ -9,46 +7,71 @@ export const mockCapsules: Capsule[] = [
   {
     id: "1",
     title: "Relic from the Past",
-    // Unlocked: 1 ปีในอดีต
-    unlockAt: new Date(now - oneYear).toISOString(), 
+    unlockAt: new Date(now - oneYear),
     description: "A fun reminder from six months ago. Was it worth the wait?",
     content: "The past is a foreign country; they do things differently there.",
-    visibility: "Private"
+    visibility: "private",
+    creator: "Alice",
+    creatorAvatar: "https://i.pravatar.cc/150?img=1",
+    mood: { name: "Happy", emoji: "😄", color: "text-yellow-500" },
+    targetDate: new Date(now - 6 * 30 * 24 * 60 * 60 * 1000),
+    views: 123,
+    bookmarked: false,
   },
   {
     id: "2",
     title: "Autumn Reflection",
-    // Locked: 1 เดือนในอนาคต
-    unlockAt: new Date(now + 30 * 24 * 60 * 60 * 1000).toISOString(), 
+    unlockAt: new Date(now + 30 * 24 * 60 * 60 * 1000),
     description: "What were my goals for this fall season?",
     content: "Goal 1: Learn Next.js. Goal 2: Build a stunning profile page.",
-    visibility: "Public"
+    visibility: "public",
+    creator: "Bob",
+    creatorAvatar: "https://i.pravatar.cc/150?img=2",
+    mood: { name: "Thoughtful", emoji: "🤔", color: "text-blue-500" },
+    targetDate: new Date(now + 30 * 24 * 60 * 60 * 1000),
+    views: 456,
+    bookmarked: false,
   },
   {
     id: "3",
     title: "New Year Protocol",
-    // Locked: 1 ม.ค. ปีหน้า
-    unlockAt: new Date(new Date().getFullYear() + 1, 0, 1).toISOString(), 
+    unlockAt: new Date(new Date().getFullYear() + 1, 0, 1),
     description: "A message saved to kick off the next year.",
     content: "Happy New Year, Future Me! Don't forget your resolutions.",
-    visibility: "Private"
+    visibility: "private",
+    creator: "Charlie",
+    creatorAvatar: "https://i.pravatar.cc/150?img=3",
+    mood: { name: "Excited", emoji: "🎉", color: "text-red-500" },
+    targetDate: new Date(new Date().getFullYear() + 1, 0, 1),
+    views: 789,
+    bookmarked: false,
   },
   {
     id: "4",
     title: "Mid-Year Checkpoint",
-    // Locked: 6 เดือนในอนาคต
-    unlockAt: new Date(now + 180 * 24 * 60 * 60 * 1000).toISOString(),
+    unlockAt: new Date(now + 180 * 24 * 60 * 60 * 1000),
     description: "Check on progress toward major goals set earlier this year.",
     content: "Is the Starship operational? Report back!",
-    visibility: "Public"
+    visibility: "public",
+    creator: "Dana",
+    creatorAvatar: "https://i.pravatar.cc/150?img=4",
+    mood: { name: "Focused", emoji: "🧐", color: "text-green-500" },
+    targetDate: new Date(now + 180 * 24 * 60 * 60 * 1000),
+    views: 234,
+    bookmarked: false,
   },
   {
     id: "5",
     title: "The Distant Horizon",
-    // Locked: 2 ปีในอนาคต
-    unlockAt: new Date(now + 2 * oneYear).toISOString(), 
+    unlockAt: new Date(now + 2 * oneYear),
     description: "A time capsule to open exactly two years from now.",
     content: "If you're reading this, humanity is safe. Probably.",
-    visibility: "Unlisted"
+    visibility: undefined,
+    creator: "Eve",
+    creatorAvatar: "https://i.pravatar.cc/150?img=5",
+    mood: { name: "Curious", emoji: "🌌", color: "text-purple-500" },
+    targetDate: new Date(now + 2 * oneYear),
+    views: 567,
+    bookmarked: false,
   },
 ];
