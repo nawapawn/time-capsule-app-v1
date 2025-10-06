@@ -1,30 +1,40 @@
-// src/app/profile/page.tsx (โค้ดที่ได้รับการแก้ไขและรวม)
-
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, CalendarDays, Rocket, X, Lock } from "lucide-react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import CapsuleCard from "@/components/CapsuleCard";
-import { mockCapsules } from "@/lib/mockData";
-import { Capsule } from "@/types";
+import { mockCapsules } from "@/lib/mockData"; // 👈 ใช้เป็นค่าเริ่มต้นเท่านั้น
+import CreateCapsuleForm from "@/components/CreateCapsuleForm";
 import { useProfileStore } from "@/store/profileStore";
-import CreateCapsuleForm from "@/components/CreateCapsuleForm"; 
+import { Capsule, CapsuleType } from "@/types"; // 👈 นำเข้า Capsule และ CapsuleType
+
+// ⚠️ ใช้ CapsuleType จาก CreateCapsuleForm.tsx เพื่อความสอดคล้อง
+// แต่เนื่องจาก CapsuleType ไม่ได้ถูก import ในไฟล์นี้โดยตรง (มาจาก CreateCapsuleForm)
+// และเรามี Capsule ที่ import มาแล้ว เราจะปรับให้มันเข้ากัน
 
 export default function ProfilePage() {
     const { profile } = useProfileStore();
+    // 💥 1. เปลี่ยนมาใช้ state เพื่อเก็บรายการแคปซูล
+    const [capsules, setCapsules] = useState<Capsule[]>(mockCapsules as Capsule[]);
     const [selectedCapsule, setSelectedCapsule] = useState<Capsule | null>(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     const toggleCreateModal = () => setIsCreateModalOpen(prev => !prev);
 
-    // ใช้ useMemo เพื่อคำนวณตำแหน่งและข้อมูลของปี (Years)
-    const timelineYears = useMemo(() => {
-        if (!mockCapsules.length) return [];
+    // 💥 2. ฟังก์ชันสำหรับเพิ่มแคปซูลใหม่
+    const addNewCapsule = useCallback((newCapsule: Capsule) => {
+        setCapsules(prevCapsules => [newCapsule, ...prevCapsules]); // เพิ่มแคปซูลใหม่ที่ด้านบน
+    }, []);
 
-        const years = mockCapsules.reduce((acc, capsule) => {
+
+    // 💥 3. แก้ไข useMemo ให้คำนวณจาก state 'capsules'
+    const timelineYears = useMemo(() => {
+        if (!capsules.length) return [];
+
+        const years = capsules.reduce((acc, capsule) => {
             const year = new Date(capsule.unlockAt).getFullYear();
             if (!acc[year]) {
                 acc[year] = { capsules: [], minDate: Infinity, maxDate: -Infinity, };
@@ -36,7 +46,7 @@ export default function ProfilePage() {
             return acc;
         }, {} as Record<number, { capsules: Capsule[], minDate: number, maxDate: number }>);
 
-        const allDates = mockCapsules.map(c => new Date(c.unlockAt).getTime());
+        const allDates = capsules.map(c => new Date(c.unlockAt).getTime());
         const globalMinDate = Math.min(...allDates);
         const globalMaxDate = Math.max(...allDates);
         const totalRange = globalMaxDate - globalMinDate;
@@ -50,17 +60,32 @@ export default function ProfilePage() {
 
             return { year: year, position: position, };
         }).sort((a, b) => parseInt(a.year) - parseInt(b.year));
-    }, [mockCapsules]);
+    }, [capsules]); // 👈 Dependency array: อัปเดตเมื่อ 'capsules' เปลี่ยน
+
+    // ** 🛠️ Utility Function สำหรับป้องกัน Hydration Mismatch 🛠️ **
+    // ใช้เพื่อคำนวณตำแหน่งที่มีการปัดเศษทศนิยมที่แน่นอน
+    const calculatePositionStyle = useCallback((position: number) => {
+        // Fix Hydration Mismatch: ปัดเศษทศนิยม 4 ตำแหน่งเพื่อให้ค่า string ตรงกัน
+        const roundedPercentage = (position * 100).toFixed(4);
+        return {
+            left: `${roundedPercentage}%`,
+            transform: 'translateX(-50%)'
+        };
+    }, []);
+    // ** -------------------------------------------------------- **
+
 
     return (
         // ********** ⚪️ ธีมสีขาวมินิมอล (Minimal White) ⚪️ **********
-        <main className="min-h-screen bg-white text-gray-900 relative overflow-hidden px-6 py-8">
-            
-            {/* 💥 1. Modal Form สร้างแคปซูลใหม่ */}
+        // 🚀 แก้ไข: เปลี่ยน py-8 เป็น pt-24 เพื่อเลื่อนเนื้อหาลงมาให้พ้น Navbar
+        <main className="min-h-screen bg-white text-gray-900 relative overflow-hidden px-6 pt-24 pb-20">
+                    
+            {/* 💥 4. Modal Form สร้างแคปซูลใหม่: ส่งฟังก์ชัน onCreate */}
             <AnimatePresence>
                 {isCreateModalOpen && (
-                    <CreateCapsuleForm 
-                        onClose={() => setIsCreateModalOpen(false)} 
+                    <CreateCapsuleForm
+                        onCreate={addNewCapsule as any} // 👈 ส่งฟังก์ชันเพิ่มแคปซูล
+                        onClose={() => setIsCreateModalOpen(false)}
                     />
                 )}
             </AnimatePresence>
@@ -110,7 +135,7 @@ export default function ProfilePage() {
                     </div>
                 </section>
 
-                {/* 🌟 Timeline Calendar 🌟 (โค้ดส่วนนี้ไม่ได้เปลี่ยนแปลง) */}
+                {/* 🌟 Timeline Calendar 🌟 */}
                 <section className="mt-12">
                     <h2 className="text-xl font-semibold mb-8 flex items-center gap-3 border-b border-gray-200 pb-2">
                         <CalendarDays size={20} className="text-violet-500" /> Time-Warp Timeline
@@ -122,7 +147,8 @@ export default function ProfilePage() {
                             {timelineYears.map((item) => (
                                 <div
                                     key={item.year}
-                                    style={{ left: `${item.position * 100}%`, transform: 'translateX(-50%)' }}
+                                    // 🚀 FIX: ใช้ calculatePositionStyle ที่มี .toFixed(4)
+                                    style={calculatePositionStyle(item.position)}
                                     className="absolute text-sm font-bold text-gray-800 opacity-90"
                                 >
                                     {item.year}
@@ -140,13 +166,13 @@ export default function ProfilePage() {
 
                         {/* Capsule points */}
                         <div className="absolute inset-0 flex items-center px-4 pt-0">
-                            {mockCapsules
+                            {capsules // 👈 ใช้ state 'capsules'
                                 .sort((a, b) => new Date(a.unlockAt).getTime() - new Date(b.unlockAt).getTime())
                                 .map((capsule, index) => {
                                     const date = new Date(capsule.unlockAt);
                                     const label = date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
 
-                                    const allDates = mockCapsules.map(c => new Date(c.unlockAt).getTime());
+                                    const allDates = capsules.map(c => new Date(c.unlockAt).getTime()); // 👈 ใช้ state 'capsules'
                                     const globalMinDate = Math.min(...allDates);
                                     const globalMaxDate = Math.max(...allDates);
                                     const totalRange = globalMaxDate - globalMinDate;
@@ -163,7 +189,8 @@ export default function ProfilePage() {
                                             animate={{ scale: 1, opacity: 1, y: 0 }}
                                             transition={{ duration: 0.6, type: "spring", delay: 0.2 + index * 0.1 }}
                                             className="flex flex-col items-center group cursor-pointer absolute z-20"
-                                            style={{ left: `${position * 100}%`, transform: 'translateX(-50%)' }}
+                                            // 🚀 FIX: ใช้ calculatePositionStyle ที่มี .toFixed(4)
+                                            style={calculatePositionStyle(position)}
                                             onClick={() => setSelectedCapsule(capsule)}
                                         >
                                             {/* **จุด Capsule (Base Dot)** */}
@@ -179,8 +206,8 @@ export default function ProfilePage() {
 
                                             {/* **จุด Capsule (Hover Effect Overlay)** */}
                                             <div
-                                                className="absolute w-5 h-5 rounded-full top-0 
-                                                        bg-transparent transition-all duration-300 group-hover:scale-[1.6] group-hover:shadow-[0_0_15px_#a78bfa,0_0_30px_rgba(139,92,246,0.2)] z-0"
+                                                className="absolute w-5 h-5 rounded-full top-0
+                                        bg-transparent transition-all duration-300 group-hover:scale-[1.6] group-hover:shadow-[0_0_15px_#a78bfa,0_0_30px_rgba(139,92,246,0.2)] z-0"
                                                 style={{
                                                     transform: 'translateY(-50%)'
                                                 }}
@@ -201,18 +228,19 @@ export default function ProfilePage() {
                     </div>
                 </section>
 
-                {/* 💖 Capsules Section 💖 (โค้ดส่วนนี้ไม่ได้เปลี่ยนแปลง) */}
+                {/* 💖 Capsules Section 💖 (โค้ดส่วนนี้แก้ไขให้ใช้ 'capsules' แทน 'mockCapsules') */}
                 <section className="mt-12">
                     <h2 className="text-xl font-semibold mb-6 flex items-center gap-3 border-b border-gray-200 pb-2">
                         <Clock size={20} className="text-violet-500" /> My Capsules
                     </h2>
                     <div className="space-y-4">
-                        {mockCapsules.map((capsule) => (
+                        {capsules.map((capsule) => ( // 👈 ใช้ state 'capsules'
                             <motion.div
                                 key={capsule.id}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: Number(capsule.id) * 0.1 }}
+                                // 💥 Transition delay ไม่จำเป็นต้องใช้ index ถ้าแคปซูลใหม่ถูกเพิ่มไปด้านหน้า
+                                transition={{ duration: 0.5 }} 
                                 onClick={() => setSelectedCapsule(capsule)}
                                 className="cursor-pointer"
                             >

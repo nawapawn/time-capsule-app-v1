@@ -1,10 +1,8 @@
-// src/app/profile/edit/page.tsx (โค้ดที่ได้รับการแก้ไข)
-
 "use client";
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Upload, User, Mail, Tag, Save, X } from "lucide-react"; // 💥 เพิ่ม X (Icon สำหรับ Cancel)
+import { ArrowLeft, Upload, User, Mail, Tag, Save, X } from "lucide-react"; 
 import Link from "next/link";
 import { useRouter } from "next/navigation"; 
 import Avatar from "@/components/Avatar";
@@ -23,6 +21,25 @@ export default function ProfileEditPage() {
         const { name, value } = e.target;
         setLocalProfile(prev => ({ ...prev, [name]: value }));
     };
+    
+    // 🚀 NEW FUNCTION: จัดการการเปลี่ยนแปลงไฟล์ Avatar
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // 1. สร้าง URL ชั่วคราวจากไฟล์ที่เลือก
+            const newAvatarUrl = URL.createObjectURL(file);
+            
+            // 2. อัปเดต localProfile ทันทีเพื่อแสดงผลแบบ Real-Time
+            setLocalProfile(prev => ({ ...prev, avatarUrl: newAvatarUrl }));
+            
+            // 3. ⚠️ IMPORTANT: ใน Production, คุณจะต้องอัปโหลดไฟล์จริง
+            // และอัปเดต localProfile ด้วย URL ที่มาจาก Server (Backend)
+            // เช่น: uploadFile(file).then(serverUrl => setLocalProfile(...));
+            
+            // เนื่องจากนี่คือตัวอย่างใน Local Store เราจึงใช้ URL.createObjectURL()
+            // ซึ่งต้องจำไว้ว่ามันเป็น URL ชั่วคราวที่ใช้ได้แค่ใน Session นี้
+        }
+    };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -35,11 +52,17 @@ export default function ProfileEditPage() {
         
         // ตั้งเวลา Redirect
         setTimeout(() => {
+            // ⚠️ ต้องจำไว้ว่า newAvatarUrl ที่สร้างด้วย URL.createObjectURL() 
+            // จะไม่สามารถใช้งานได้อีกเมื่อหน้านี้ถูก Unmount และ Mount ใหม่
+            // ในการใช้งานจริง, store จะเก็บ URL ที่มาจาก Server เท่านั้น
             router.push('/profile');
+            
+            // 💥 ควรมีการเรียก URL.revokeObjectURL(localProfile.avatarUrl) 
+            // หาก URL นั้นถูกสร้างด้วย createObjectURL เพื่อเคลียร์ Memory
+            // แต่เราจะละไว้ก่อนเพื่อความเรียบง่ายของตัวอย่างนี้
         }, 1500); // 1.5 วินาที
     };
     
-    // 💥 ฟังก์ชันสำหรับจัดการการยกเลิก (กลับไปหน้า profile)
     const handleCancel = () => {
         router.push('/profile');
     };
@@ -60,14 +83,6 @@ export default function ProfileEditPage() {
             
             <div className="max-w-xl mx-auto relative z-10 pb-20">
                 
-                {/* ❌ ลบ Back Link ออก */}
-                {/* <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4 }} className="mb-8">
-                    <Link href="/profile" className="flex items-center text-gray-600 hover:text-gray-900 transition">
-                        <ArrowLeft size={20} className="mr-2" />
-                        Back to Profile
-                    </Link>
-                </motion.div> */}
-
                 {/* Header Title */}
                 <motion.h1
                     initial={{ opacity: 0, y: -20 }}
@@ -91,7 +106,13 @@ export default function ProfileEditPage() {
                             // 🖤 ปุ่ม Upload: เปลี่ยนเป็นสีดำ Solid
                             className="mt-4 px-4 py-2 text-sm font-semibold rounded-lg text-white bg-gray-900 border border-gray-900 cursor-pointer hover:bg-black transition shadow-lg shadow-gray-400/50"
                         >
-                            <input type="file" className="hidden" accept="image/*" /* TODO: Implement file upload logic */ />
+                            <input 
+                                type="file" 
+                                className="hidden" 
+                                accept="image/*" 
+                                // 🚀 NEW: เมื่อมีการเลือกไฟล์, เรียกใช้ handleAvatarChange
+                                onChange={handleAvatarChange} 
+                            />
                             <Upload size={16} className="inline mr-2" />
                             Upload Avatar
                         </motion.label>
