@@ -7,7 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import FeedCapsuleCard from "@/components/Home/FeedCapsuleCard";
-import PopularMemories from "@/components/Home/PopularMemories"; // 👈 แก้ไขการสะกดจาก PopularMemularies เป็น PopularMemories
+import PopularMemories from "@/components/Home/PopularMemories";
 import ShareButton from "@/components/Home/ShareButton";
 import CreateCapsuleForm from "@/components/CreateCapsuleForm";
 import Navbar from "@/components/Navbar";
@@ -15,23 +15,28 @@ import { CapsuleType, moodOptions } from "@/utils/capsuleUtils";
 import { posts } from "@/data/posts";
 import { useCapsule } from "@/context/CapsuleContext";
 
-// 2. กำหนดค่าคงที่สำหรับการแบ่งหน้า
+// === Pagination constants ===
 const ITEMS_PER_PAGE = 10;
 const TOTAL_POSTS = posts.length;
-const ALL_CAPSULES = posts
+
+// === Simulated capsule dataset ===
+const ALL_CAPSULES: CapsuleType[] = posts
   .map((title, i) => {
     const user = {
       name: { first: `User`, last: `${i + 1}` },
       picture: { large: `https://i.pravatar.cc/150?img=${i % 70}` },
     };
+
+    // ✅ mood ต้องมี color เสมอ
     const mood = moodOptions[i % moodOptions.length];
+
     return {
       id: i,
       title,
       creator: `${user.name.first} ${user.name.last}`,
       creatorAvatar: user.picture.large,
       imageSrc: `https://picsum.photos/seed/${i}/600/400`,
-      mood,
+      mood, // { name, emoji, color }
       targetDate: new Date(Date.now() + (i + 1) * 86400000),
       views: Math.floor(Math.random() * 9999) + 100,
       bookmarked: false,
@@ -39,7 +44,7 @@ const ALL_CAPSULES = posts
   })
   .reverse();
 
-// ฟังก์ชันจำลองการดึงข้อมูลแบบแบ่งหน้า
+// === Mock API for pagination ===
 const fetchPaginatedCapsules = (
   page: number
 ): Promise<{ data: CapsuleType[]; hasMore: boolean }> => {
@@ -59,18 +64,18 @@ const HomePage: React.FC = () => {
   const [popularCapsules, setPopularCapsules] = useState<CapsuleType[]>([]);
   const [shareCapsule, setShareCapsule] = useState<CapsuleType | null>(null);
   const [shareAnchor, setShareAnchor] =
-    useState<RefObject<HTMLButtonElement | null> | null>(null);
+    useState<RefObject<HTMLButtonElement> | null>(null);
   const [showCreateCapsuleForm, setShowCreateCapsuleForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Infinite Scroll state
+  // Infinite scroll state
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  // Ref สำหรับ Intersection Observer
+  // Ref for observer
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // ฟังก์ชันโหลดข้อมูลเพิ่ม (useCallback เพื่อแก้ ESLint)
+  // === Load more function ===
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
 
@@ -88,7 +93,7 @@ const HomePage: React.FC = () => {
     }
   }, [loading, hasMore, page, setFeedData]);
 
-  // โหลดหน้าแรก
+  // === Load initial capsules ===
   useEffect(() => {
     const loadInitialData = async () => {
       try {
@@ -111,37 +116,47 @@ const HomePage: React.FC = () => {
     loadInitialData();
   }, [setFeedData]);
 
-  // Intersection Observer สำหรับ Infinite Scroll
+  // === IntersectionObserver for infinite scroll ===
   useEffect(() => {
     const ref = loadMoreRef.current;
     if (!ref || !hasMore) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
-          loadMore();
-        }
+        if (entries[0].isIntersecting) loadMore();
       },
       { rootMargin: "500px 0px" }
     );
 
     observer.observe(ref);
-
     return () => {
       if (ref) observer.unobserve(ref);
     };
-  }, [hasMore, loading, loadMore]);
+  }, [hasMore, loadMore]);
 
+  // === Share handler ===
   const handleShare = (
     capsule: CapsuleType,
-    ref: RefObject<HTMLButtonElement | null>
+    ref: RefObject<HTMLButtonElement>
   ) => {
     setShareCapsule(capsule);
     setShareAnchor(ref);
   };
 
+  // ✅ Ensure type consistency: CapsuleType from utils only
   const handleCreateCapsule = (newCapsule: CapsuleType) => {
-    setFeedData((prev) => [newCapsule, ...prev]);
+    // ถ้า mood ที่ส่งเข้ามายังไม่มี color -> ใส่ค่า default
+    const moodWithColor = {
+      ...newCapsule.mood,
+      color: newCapsule.mood.color ?? "#cccccc",
+    };
+
+    const fixedCapsule: CapsuleType = {
+      ...newCapsule,
+      mood: moodWithColor,
+    };
+
+    setFeedData((prev) => [fixedCapsule, ...prev]);
     setShowCreateCapsuleForm(false);
   };
 
@@ -151,11 +166,13 @@ const HomePage: React.FC = () => {
 
       {showCreateCapsuleForm && (
         <CreateCapsuleForm
+          // 👇 ensure prop type matches capsuleUtils.CapsuleType
           onCreate={handleCreateCapsule}
           onClose={() => setShowCreateCapsuleForm(false)}
         />
       )}
 
+      {/* === Popular section === */}
       <div className="w-full flex justify-center mt-4">
         <div className="w-full max-w-5xl">
           <PopularMemories
@@ -169,9 +186,9 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
+      {/* === Feed section === */}
       <section className="w-full mt-4 flex justify-center">
         <div className="grid grid-cols-1 gap-6 w-full max-w-4xl">
-          {/* Skeleton loader ครั้งแรก */}
           {loading &&
             feedData.length === 0 &&
             Array.from({ length: 6 }).map((_, i) => (
@@ -181,9 +198,8 @@ const HomePage: React.FC = () => {
               />
             ))}
 
-          {/* แสดง Feed Capsules */}
           {feedData.map((c) => {
-            const shareRef = React.createRef<HTMLButtonElement | null>();
+            const shareRef = React.createRef<HTMLButtonElement>();
             return (
               <FeedCapsuleCard
                 key={c.id}
@@ -196,7 +212,6 @@ const HomePage: React.FC = () => {
             );
           })}
 
-          {/* Target สำหรับ Infinite Scroll */}
           {hasMore && (
             <div ref={loadMoreRef} className="text-center py-8">
               {loading ? (
@@ -209,7 +224,7 @@ const HomePage: React.FC = () => {
 
           {!hasMore && (
             <div className="text-center py-8 text-gray-500">
-              คุณได้ดูแคปซูลทั้งหมดแล้ว
+              คุณได้ดูแคปซูลทั้งหมดแล้ว 🎉
             </div>
           )}
         </div>
