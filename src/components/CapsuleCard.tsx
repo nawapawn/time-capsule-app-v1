@@ -12,14 +12,14 @@ interface CapsuleCardProps {
 // ⚪️ ฟังก์ชันช่วยในการกำหนดสีและไอคอนตามสถานะ Visibility (Monochrome Light Mode) ⚪️
 const getVisibilityProps = (visibility: Capsule['visibility']) => {
   switch (visibility) {
-    case 'Public':
+    case 'public':
       return {
         icon: Users,
         text: 'PUBLIC',
         // 🖤 Monochrome: เน้นความตัดกัน (พื้นหลังเทาอ่อนมาก / ข้อความดำ)
         className: 'bg-gray-100/70 text-gray-900 shadow-sm shadow-gray-300/30',
       };
-    case 'Private':
+    case 'private':
       return {
         icon: User,
         text: 'PRIVATE',

@@ -22,7 +22,7 @@ export default function ProfilePage() {
         id: String(c.id), // ถ้า original เป็น number
         targetDate: new Date(c.targetDate),
         unlockAt: c.unlockAt ? new Date(c.unlockAt) : undefined,
-        visibility: c.visibility === "Public" ? "Public" : "Private", // match literal type
+        visibility: c.visibility === "public" ? "Public" : "private", // match literal type
         mood: c.mood,
         creator: c.creator,
         creatorAvatar: c.creatorAvatar,
@@ -334,7 +334,7 @@ export default function ProfilePage() {
                 </p>
                 <span
                   className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                    selectedCapsule.visibility === "Public"
+                    selectedCapsule.visibility === "public"
                       ? "bg-violet-100 text-violet-700"
                       : "bg-pink-100 text-pink-700"
                   }`}

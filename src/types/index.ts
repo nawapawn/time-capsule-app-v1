@@ -21,7 +21,7 @@ export type Capsule = {
     mood: (typeof moodOptions)[number]; // ต้องมี name, emoji, color ครบ
     targetDate: Date;
     unlockAt?: Date; // รองรับ field ที่ ProfilePage ต้องการ
-    visibility?: "Private" | "Public"; // เพิ่ม field visibility
+    visibility?: "private" | "public"; // เพิ่ม field visibility
     views: number;
     bookmarked: boolean;
     isPrivate?: boolean; // 💥 สำหรับฟอร์มสร้าง Capsule
