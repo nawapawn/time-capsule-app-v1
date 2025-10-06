@@ -75,7 +75,7 @@ export default function CreateCapsuleForm({
         : `https://picsum.photos/seed/${Date.now()}/600/400`;
 
       const newCapsule: CapsuleType = {
-        id: Date.now(),
+        id: Date.now().toString(),
         title: data.title,
         content: data.content,
         creator: "You",

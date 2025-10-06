@@ -12,7 +12,7 @@ export const moodOptions = [
 
 // โครงสร้าง Capsule — ใช้กลางทั้งระบบ
 export interface CapsuleType {
-  id: number;
+  id: string;
   title: string;
   content: string; // ข้อความหลักของ Capsule
   description?: string; // ถ้ามีรายละเอียดเพิ่มเติม
