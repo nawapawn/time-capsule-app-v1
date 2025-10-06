@@ -63,7 +63,7 @@ const HomePage: React.FC = () => {
   const [popularCapsules, setPopularCapsules] = useState<CapsuleType[]>([]);
   const [shareCapsule, setShareCapsule] = useState<CapsuleType | null>(null);
   const [shareAnchor, setShareAnchor] =
-    useState<RefObject<HTMLButtonElement> | null>(null);
+    useState<RefObject<HTMLButtonElement | null> | null>(null); // ✅ แก้ type ให้รองรับ null
   const [showCreateCapsuleForm, setShowCreateCapsuleForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -123,17 +123,20 @@ const HomePage: React.FC = () => {
     };
   }, [hasMore, loadMore]);
 
+  // ✅ แก้ handleShareFeed type ให้ตรงกับ state
   const handleShareFeed = (
     capsule: CapsuleType,
-    ref: RefObject<HTMLButtonElement>
+    ref: RefObject<HTMLButtonElement | null>
   ) => {
     setShareCapsule(capsule);
     setShareAnchor(ref);
   };
 
+  // ✅ แก้ handleSharePopular type ให้ตรงกับ state
   const handleSharePopular = (capsule: CapsuleType) => {
+    const dummyRef = React.createRef<HTMLButtonElement | null>();
     setShareCapsule(capsule);
-    setShareAnchor(React.createRef()); // <- dummy ref เพื่อ match type
+    setShareAnchor(dummyRef);
   };
 
   const handleCreateCapsule = (newCapsule: CapsuleType) => {
@@ -183,7 +186,7 @@ const HomePage: React.FC = () => {
             ))}
 
           {feedData.map((c) => {
-            const shareRef = React.createRef<HTMLButtonElement>();
+            const shareRef = React.createRef<HTMLButtonElement | null>();
             return (
               <FeedCapsuleCard
                 key={c.id}
