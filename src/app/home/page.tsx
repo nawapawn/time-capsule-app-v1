@@ -7,7 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import FeedCapsuleCard from "@/components/Home/FeedCapsuleCard";
-import PopularMemories from "@/components/Home/PopularMemories";
+import PopularMemories from "@/components/Home/PopularMemularies";
 import ShareButton from "@/components/Home/ShareButton";
 import CreateCapsuleForm from "@/components/CreateCapsuleForm";
 import Navbar from "@/components/Navbar";
@@ -18,24 +18,30 @@ import { useCapsule } from "@/context/CapsuleContext";
 // 2. กำหนดค่าคงที่สำหรับการแบ่งหน้า
 const ITEMS_PER_PAGE = 10;
 const TOTAL_POSTS = posts.length;
-const ALL_CAPSULES = posts
+
+// สร้าง Type สำหรับ Mood ที่สมบูรณ์ตามข้อผิดพลาดที่ระบุ
+type MoodType = (typeof moodOptions)[number];
+
+// อัปเดต ALL_CAPSULES ให้ใช้ MoodType ที่สมบูรณ์
+const ALL_CAPSULES: CapsuleType[] = posts
   .map((title, i) => {
     const user = {
       name: { first: `User`, last: `${i + 1}` },
       picture: { large: `https://i.pravatar.cc/150?img=${i % 70}` },
     };
-    const mood = moodOptions[i % moodOptions.length];
+    // Ensure mood has the 'color' property
+    const mood: MoodType = moodOptions[i % moodOptions.length];
     return {
       id: i,
       title,
       creator: `${user.name.first} ${user.name.last}`,
       creatorAvatar: user.picture.large,
       imageSrc: `https://picsum.photos/seed/${i}/600/400`,
-      mood,
+      mood, // Mood ที่มี 'color'
       targetDate: new Date(Date.now() + (i + 1) * 86400000),
       views: Math.floor(Math.random() * 9999) + 100,
       bookmarked: false,
-    };
+    } as CapsuleType; // ยืนยัน Type เพื่อให้สอดคล้องกับโครงสร้างของ CapsuleType
   })
   .reverse();
 
@@ -140,7 +146,8 @@ const HomePage: React.FC = () => {
     setShareAnchor(ref);
   };
 
-  const handleCreateCapsule = (newCapsule: CapsuleType) => { // <--- ฟังก์ชันที่ใช้ CapsuleType ถูกต้อง
+  const handleCreateCapsule = (newCapsule: CapsuleType) => {
+    // การใช้ Type: CapsuleType ที่นำเข้าจาก '@/utils/capsuleUtils'
     setFeedData((prev) => [newCapsule, ...prev]);
     setShowCreateCapsuleForm(false);
   };
@@ -151,7 +158,7 @@ const HomePage: React.FC = () => {
 
       {showCreateCapsuleForm && (
         <CreateCapsuleForm
-          onCreate={handleCreateCapsule} // <--- ส่งฟังก์ชันนี้
+          onCreate={handleCreateCapsule} // ส่งฟังก์ชันที่ใช้ CapsuleType ที่ถูกต้อง
           onClose={() => setShowCreateCapsuleForm(false)}
         />
       )}
