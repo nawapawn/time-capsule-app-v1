@@ -1,19 +1,23 @@
-// src/components/CreateCapsuleForm.tsx (โค้ดที่ได้รับการแก้ไข)
-
+// src/components/CreateCapsuleForm.tsx
 "use client";
+
 import React, { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
-// ... (imports เดิม) ...
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import toast, { Toaster } from "react-hot-toast";
 import { Loader2, Send, Image as ImgIcon, Trash2 } from "lucide-react";
 import CapsuleToolbar from "./CapsuleToolbar";
-// 💡 เพิ่ม isPrivate ใน CapsuleType เพื่อให้ส่งข้อมูลกลับไปได้ครบถ้วน
+import { moodOptions } from "@/utils/capsuleUtils";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import { useDropzone } from "react-dropzone";
+
+// ✅ CapsuleType structure
 export interface CapsuleType {
   id: number;
   title: string;
-  content: string; // เพิ่ม content
+  content: string;
   creator: string;
   creatorAvatar: string;
   imageSrc: string;
@@ -21,14 +25,10 @@ export interface CapsuleType {
   targetDate: Date;
   views: number;
   bookmarked: boolean;
-  isPrivate: boolean; // 💥 เพิ่ม isPrivate
+  isPrivate: boolean;
 }
-import { moodOptions } from "@/utils/capsuleUtils";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { useDropzone } from "react-dropzone";
 
-// ... (schema เดิม) ...
+// ✅ Schema validation
 const capsuleSchema = z.object({
   title: z.string().nonempty("Please enter the capsule title."),
   content: z.string().nonempty("Please write a message to your future self."),
@@ -43,7 +43,6 @@ const capsuleSchema = z.object({
 type CapsuleFormValues = z.infer<typeof capsuleSchema>;
 
 interface CreateCapsuleFormProps {
-  // 💥 แก้ไข onCreate ให้รับ CapsuleType
   onCreate?: (capsule: CapsuleType) => void;
   onClose?: () => void;
 }
@@ -52,13 +51,11 @@ export default function CreateCapsuleForm({
   onCreate,
   onClose,
 }: CreateCapsuleFormProps) {
-  // ... (state เดิม) ...
   const [isPrivate, setIsPrivate] = useState(true);
   const [mood, setMood] = useState<string>(moodOptions[0].name);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // ... (useForm และ useDropzone เดิม) ...
   const {
     register,
     handleSubmit,
@@ -68,6 +65,7 @@ export default function CreateCapsuleForm({
     resolver: zodResolver(capsuleSchema),
   });
 
+  // ✅ Image dropzone
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) setImageFile(acceptedFiles[0]);
   }, []);
@@ -78,10 +76,11 @@ export default function CreateCapsuleForm({
     multiple: false,
   });
 
+  // ✅ Submit
   const onSubmit = (data: CapsuleFormValues) => {
     setIsLoading(true);
+
     setTimeout(() => {
-      setIsLoading(false);
       const moodObject =
         moodOptions.find((m) => m.name === mood) || moodOptions[0];
       const imageSrc = imageFile
@@ -91,7 +90,6 @@ export default function CreateCapsuleForm({
       const newCapsule: CapsuleType = {
         id: Date.now(),
         title: data.title,
-        // 💥 เพิ่ม content เข้าไปใน newCapsule
         content: data.content,
         creator: "You",
         creatorAvatar: "https://i.pravatar.cc/150?img=68",
@@ -100,24 +98,21 @@ export default function CreateCapsuleForm({
         targetDate: new Date(data.openDate),
         views: 0,
         bookmarked: false,
-        // 💥 เพิ่ม isPrivate เข้าไป
-        isPrivate: isPrivate,
+        isPrivate,
       };
 
-      // 💥 เรียก onCreate() เพื่อส่งข้อมูลกลับไปยัง ProfilePage
       onCreate?.(newCapsule);
-
       toast.success("Your Time Capsule has been created!");
+
       reset();
       setMood(moodOptions[0].name);
       setIsPrivate(true);
       setImageFile(null);
-      // 💥 onClose() จะถูกเรียกหลังจาก onCreate เพื่อปิด Modal
+      setIsLoading(false);
       onClose?.();
     }, 1000);
   };
-  // ... (ส่วน return JSX เดิม) ...
-  // (ส่วน return JSX เดิม)
+
   return (
     <AnimatePresence>
       <motion.div
@@ -172,7 +167,7 @@ export default function CreateCapsuleForm({
               onPrivacyToggle={setIsPrivate}
             />
 
-            {/* Mood */}
+            {/* Mood selection */}
             <div className="flex flex-wrap gap-2 mt-1 overflow-x-auto">
               {moodOptions.map((m) => (
                 <button
@@ -181,7 +176,7 @@ export default function CreateCapsuleForm({
                   onClick={() => setMood(m.name)}
                   className={`px-3 py-2 rounded-lg text-sm font-medium flex-shrink-0 transition-all ${
                     mood === m.name
-                      ? "bg-neutral-800 text-white dark:bg-white dark:text-neutral-900"
+                      ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
                       : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700"
                   }`}
                 >
@@ -200,7 +195,7 @@ export default function CreateCapsuleForm({
               <p className="text-xs text-red-500">{errors.openDate.message}</p>
             )}
 
-            {/* Image Upload Drag & Drop */}
+            {/* Image Upload */}
             <div
               {...getRootProps()}
               className={`flex items-center gap-3 mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
@@ -225,6 +220,7 @@ export default function CreateCapsuleForm({
                 </button>
               )}
             </div>
+
             {imageFile && (
               <div className="w-full h-48 relative mt-2 rounded-lg overflow-hidden">
                 <Image

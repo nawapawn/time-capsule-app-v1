@@ -1,4 +1,6 @@
+// src/app/home/page.tsx
 "use client";
+
 import React, {
   useState,
   useEffect,
@@ -27,12 +29,12 @@ const ALL_CAPSULES: CapsuleType[] = posts
       picture: { large: `https://i.pravatar.cc/150?img=${i % 70}` },
     };
 
-    // ✅ mood ต้องมี color เสมอ
     const mood = moodOptions[i % moodOptions.length];
 
     return {
       id: i,
       title,
+      content: `This is a future note from User ${i + 1}.`,
       creator: `${user.name.first} ${user.name.last}`,
       creatorAvatar: user.picture.large,
       imageSrc: `https://picsum.photos/seed/${i}/600/400`,
@@ -40,6 +42,7 @@ const ALL_CAPSULES: CapsuleType[] = posts
       targetDate: new Date(Date.now() + (i + 1) * 86400000),
       views: Math.floor(Math.random() * 9999) + 100,
       bookmarked: false,
+      isPrivate: i % 3 === 0, // ให้บางแคปซูลเป็น private บ้าง
     };
   })
   .reverse();
@@ -143,12 +146,14 @@ const HomePage: React.FC = () => {
     setShareAnchor(ref);
   };
 
-  // ✅ Ensure type consistency: CapsuleType from utils only
+  // ✅ Capsule create handler (รับจาก CreateCapsuleForm)
   const handleCreateCapsule = (newCapsule: CapsuleType) => {
-    // ถ้า mood ที่ส่งเข้ามายังไม่มี color -> ใส่ค่า default
     const moodWithColor = {
       ...newCapsule.mood,
-      color: newCapsule.mood.color ?? "#cccccc",
+      color:
+        newCapsule.mood.color ||
+        moodOptions.find((m) => m.name === newCapsule.mood.name)?.color ||
+        "text-gray-600 bg-gray-100",
     };
 
     const fixedCapsule: CapsuleType = {
@@ -161,18 +166,19 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[80vh] bg-white flex flex-col justify-center pt-16 px-4 pb-8 relative">
+    <div className="min-h-[80vh] bg-white dark:bg-neutral-950 flex flex-col justify-center pt-16 px-4 pb-8 relative">
+      {/* === Navbar === */}
       <Navbar onOpenCreateCapsule={() => setShowCreateCapsuleForm(true)} />
 
+      {/* === Create Capsule Modal === */}
       {showCreateCapsuleForm && (
         <CreateCapsuleForm
-          // 👇 ensure prop type matches capsuleUtils.CapsuleType
           onCreate={handleCreateCapsule}
           onClose={() => setShowCreateCapsuleForm(false)}
         />
       )}
 
-      {/* === Popular section === */}
+      {/* === Popular Section === */}
       <div className="w-full flex justify-center mt-4">
         <div className="w-full max-w-5xl">
           <PopularMemories
@@ -186,9 +192,10 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-      {/* === Feed section === */}
+      {/* === Feed Section === */}
       <section className="w-full mt-4 flex justify-center">
         <div className="grid grid-cols-1 gap-6 w-full max-w-4xl">
+          {/* Skeleton Loading */}
           {loading &&
             feedData.length === 0 &&
             Array.from({ length: 6 }).map((_, i) => (
@@ -198,6 +205,7 @@ const HomePage: React.FC = () => {
               />
             ))}
 
+          {/* Feed Cards */}
           {feedData.map((c) => {
             const shareRef = React.createRef<HTMLButtonElement>();
             return (
@@ -212,16 +220,20 @@ const HomePage: React.FC = () => {
             );
           })}
 
+          {/* Infinite Scroll Loader */}
           {hasMore && (
             <div ref={loadMoreRef} className="text-center py-8">
               {loading ? (
-                <div className="animate-pulse text-gray-500">กำลังโหลด...</div>
+                <div className="animate-pulse text-gray-500">
+                  กำลังโหลด...
+                </div>
               ) : (
                 <div className="text-gray-400">เลื่อนลงเพื่อโหลดเพิ่ม</div>
               )}
             </div>
           )}
 
+          {/* End Message */}
           {!hasMore && (
             <div className="text-center py-8 text-gray-500">
               คุณได้ดูแคปซูลทั้งหมดแล้ว 🎉
@@ -230,6 +242,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* === Share Popup === */}
       {shareCapsule && shareAnchor && (
         <ShareButton capsuleId={shareCapsule.id} shareRef={shareAnchor} />
       )}

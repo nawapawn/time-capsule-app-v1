@@ -10,19 +10,20 @@ export const moodOptions = [
   { name: "Tired", emoji: "😴", color: "text-gray-600 bg-gray-100" },
 ];
 
-// โครงสร้าง Capsule
+// โครงสร้าง Capsule — ใช้กลางทั้งระบบ
 export interface CapsuleType {
   id: number;
   title: string;
   creator: string;
   creatorAvatar: string;
   imageSrc?: string;
-  mood: typeof moodOptions[number]; // เป็น object เดียว
+  mood: typeof moodOptions[number]; // ต้องมี name, emoji, color ครบ
   targetDate: Date;
   views: number;
   bookmarked: boolean;
-  content?: string;    // ข้อความหลักของ Capsule
-  postText?: string;   // ข้อความแบบอนาคตสวิง ๆ (บันทึกแรก)
+  content?: string;   // ข้อความหลักของ Capsule
+  postText?: string;  // ข้อความบันทึกแรก
+  isPrivate?: boolean; // 💥 เพิ่ม field นี้ให้รองรับฟอร์มสร้าง Capsule
 }
 
 // ฟังก์ชัน format views
