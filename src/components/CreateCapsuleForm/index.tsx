@@ -8,25 +8,14 @@ import * as z from "zod";
 import toast, { Toaster } from "react-hot-toast";
 import { Loader2, Send, Image as ImgIcon, Trash2 } from "lucide-react";
 import CapsuleToolbar from "./CapsuleToolbar";
-import { moodOptions } from "@/utils/capsuleUtils";
+import { CapsuleType, moodOptions } from "@/utils/capsuleUtils";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 
+
 // ✅ CapsuleType structure
-export interface CapsuleType {
-  id: number;
-  title: string;
-  content: string;
-  creator: string;
-  creatorAvatar: string;
-  imageSrc: string;
-  mood: { name: string; emoji: string };
-  targetDate: Date;
-  views: number;
-  bookmarked: boolean;
-  isPrivate: boolean;
-}
+
 
 // ✅ Schema validation
 const capsuleSchema = z.object({
