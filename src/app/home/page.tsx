@@ -1,13 +1,7 @@
 // src/app/home/page.tsx
 "use client";
 
-import React, {
-  useState,
-  useEffect,
-  RefObject,
-  useRef,
-  useCallback,
-} from "react";
+import React, { useState, useEffect, RefObject, useRef, useCallback } from "react";
 import FeedCapsuleCard from "@/components/Home/FeedCapsuleCard";
 import PopularMemories from "@/components/Home/PopularMemories";
 import ShareButton from "@/components/Home/ShareButton";
@@ -28,7 +22,6 @@ const ALL_CAPSULES: CapsuleType[] = posts
       name: { first: `User`, last: `${i + 1}` },
       picture: { large: `https://i.pravatar.cc/150?img=${i % 70}` },
     };
-
     const mood = moodOptions[i % moodOptions.length];
 
     return {
@@ -67,28 +60,25 @@ const HomePage: React.FC = () => {
   const [popularCapsules, setPopularCapsules] = useState<CapsuleType[]>([]);
   const [shareCapsule, setShareCapsule] = useState<CapsuleType | null>(null);
   const [shareAnchor, setShareAnchor] =
-    useState<RefObject<HTMLButtonElement | null> | null>(null); // แก้ type ตรงนี้
+    useState<RefObject<HTMLButtonElement | null> | null>(null); 
   const [showCreateCapsuleForm, setShowCreateCapsuleForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // === Load more function ===
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
-
     setLoading(true);
     try {
-      const { data: newCapsules, hasMore: newHasMore } =
-        await fetchPaginatedCapsules(page);
-      setFeedData((prevItems) => [...prevItems, ...newCapsules]);
-      setPage((prevPage) => prevPage + 1);
+      const { data: newCapsules, hasMore: newHasMore } = await fetchPaginatedCapsules(page);
+      setFeedData((prev) => [...prev, ...newCapsules]);
+      setPage((prev) => prev + 1);
       setHasMore(newHasMore);
-    } catch (error) {
-      console.error("Error loading more data:", error);
+    } catch (err) {
+      console.error("Error loading more data:", err);
     } finally {
       setLoading(false);
     }
@@ -99,15 +89,11 @@ const HomePage: React.FC = () => {
     const loadInitialData = async () => {
       try {
         setLoading(true);
-        const { data: initialCapsules, hasMore: initialHasMore } =
-          await fetchPaginatedCapsules(1);
+        const { data: initialCapsules, hasMore: initialHasMore } = await fetchPaginatedCapsules(1);
         setFeedData(initialCapsules);
         setPage(2);
         setHasMore(initialHasMore);
-
-        setPopularCapsules(
-          [...ALL_CAPSULES].sort((a, b) => b.views - a.views).slice(0, 10)
-        );
+        setPopularCapsules([...ALL_CAPSULES].sort((a,b)=>b.views-a.views).slice(0,10));
       } catch (err) {
         console.error("Error fetching initial data:", err);
       } finally {
@@ -123,44 +109,33 @@ const HomePage: React.FC = () => {
     if (!ref || !hasMore) return;
 
     const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) loadMore();
-      },
+      (entries) => { if(entries[0].isIntersecting) loadMore(); },
       { rootMargin: "500px 0px" }
     );
 
     observer.observe(ref);
-    return () => {
-      if (ref) observer.unobserve(ref);
-    };
+    return () => { if(ref) observer.unobserve(ref); };
   }, [hasMore, loadMore]);
 
-  // === Share handler (null-safe) ===
-  const handleShare = (
-    capsule: CapsuleType,
-    ref: RefObject<HTMLButtonElement | null>
-  ) => {
+  // === Share handler ===
+  const handleShareFeed = (capsule: CapsuleType, ref: RefObject<HTMLButtonElement | null>) => {
     if (!ref.current) return;
     setShareCapsule(capsule);
     setShareAnchor(ref);
+  };
+
+  const handleSharePopular = (capsule: CapsuleType) => {
+    setShareCapsule(capsule);
+    setShareAnchor(null); // popular section ไม่มี ref
   };
 
   // === Capsule create handler ===
   const handleCreateCapsule = (newCapsule: CapsuleType) => {
     const moodWithColor = {
       ...newCapsule.mood,
-      color:
-        newCapsule.mood.color ||
-        moodOptions.find((m) => m.name === newCapsule.mood.name)?.color ||
-        "text-gray-600 bg-gray-100",
+      color: newCapsule.mood.color || moodOptions.find(m=>m.name===newCapsule.mood.name)?.color || "text-gray-600 bg-gray-100"
     };
-
-    const fixedCapsule: CapsuleType = {
-      ...newCapsule,
-      mood: moodWithColor,
-    };
-
-    setFeedData((prev) => [fixedCapsule, ...prev]);
+    setFeedData(prev => [{ ...newCapsule, mood: moodWithColor }, ...prev]);
     setShowCreateCapsuleForm(false);
   };
 
@@ -175,39 +150,33 @@ const HomePage: React.FC = () => {
         />
       )}
 
+      {/* Popular Section */}
       <div className="w-full flex justify-center mt-4">
         <div className="w-full max-w-5xl">
           <PopularMemories
-            popularCapsules={popularCapsules.map((c) => ({
-              ...c,
-              bookmarked: isBookmarked(c.id),
-            }))}
+            popularCapsules={popularCapsules.map(c=>({...c, bookmarked: isBookmarked(c.id)}))}
             onBookmark={toggleBookmark}
-            onShare={handleShare}
+            onShare={handleSharePopular} // <- type-safe
           />
         </div>
       </div>
 
+      {/* Feed Section */}
       <section className="w-full mt-4 flex justify-center">
         <div className="grid grid-cols-1 gap-6 w-full max-w-4xl">
-          {loading &&
-            feedData.length === 0 &&
-            Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={`skeleton-${i}`}
-                className="h-64 w-full rounded-xl bg-gray-200 dark:bg-neutral-700 animate-pulse"
-              />
-            ))}
+          {loading && feedData.length===0 && Array.from({length:6}).map((_,i)=>(
+            <div key={i} className="h-64 w-full rounded-xl bg-gray-200 dark:bg-neutral-700 animate-pulse"/>
+          ))}
 
-          {feedData.map((c) => {
+          {feedData.map(c=>{
             const shareRef = React.createRef<HTMLButtonElement>();
             return (
               <FeedCapsuleCard
                 key={c.id}
-                capsule={{ ...c, bookmarked: isBookmarked(c.id) }}
-                onBookmark={() => toggleBookmark(c)}
+                capsule={{...c, bookmarked: isBookmarked(c.id)}}
+                onBookmark={()=>toggleBookmark(c)}
                 size="large"
-                onShare={handleShare}
+                onShare={handleShareFeed} // <- type-safe
                 shareRef={shareRef}
               />
             );
@@ -215,11 +184,8 @@ const HomePage: React.FC = () => {
 
           {hasMore && (
             <div ref={loadMoreRef} className="text-center py-8">
-              {loading ? (
-                <div className="animate-pulse text-gray-500">กำลังโหลด...</div>
-              ) : (
-                <div className="text-gray-400">เลื่อนลงเพื่อโหลดเพิ่ม</div>
-              )}
+              {loading ? <div className="animate-pulse text-gray-500">กำลังโหลด...</div>
+              : <div className="text-gray-400">เลื่อนลงเพื่อโหลดเพิ่ม</div>}
             </div>
           )}
 
@@ -231,7 +197,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {shareCapsule && shareAnchor && (
+      {shareCapsule && (
         <ShareButton capsuleId={shareCapsule.id} shareRef={shareAnchor} />
       )}
     </div>
