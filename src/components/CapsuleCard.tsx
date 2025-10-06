@@ -41,7 +41,7 @@ export default function CapsuleCard({ capsule }: CapsuleCardProps) {
   // 1. เพิ่ม State เพื่อควบคุมการแสดงรายละเอียด
   const [isDetailVisible, setIsDetailVisible] = useState(false);
 
-  const unlockDate = new Date(capsule.unlockAt);
+  const unlockDate = new Date(capsule.unlockAt || Date.now());
   const isLocked = unlockDate.getTime() > Date.now(); 
 
   // 2. ฟังก์ชันจัดการการคลิก

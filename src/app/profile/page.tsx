@@ -9,26 +9,51 @@ import CapsuleCard from "@/components/CapsuleCard";
 import { mockCapsules } from "@/lib/mockData";
 import CreateCapsuleForm from "@/components/CreateCapsuleForm";
 import { CapsuleType } from "@/utils/capsuleUtils";
+import { moodOptions } from "@/utils/capsuleUtils";
 
 const NEARBY_THRESHOLD = 0.015;
 const Y_OFFSET_DISTANCE = 30;
 
 export default function ProfilePage() {
-  const [capsules, setCapsules] = useState<CapsuleType[]>(mockCapsules as CapsuleType[]);
-  const [selectedCapsule, setSelectedCapsule] = useState<CapsuleType | null>(null);
+  const [capsules, setCapsules] = useState<CapsuleType[]>(
+    () =>
+      mockCapsules.map((c) => ({
+        ...c,
+        id: String(c.id), // ถ้า original เป็น number
+        targetDate: new Date(c.targetDate),
+        unlockAt: c.unlockAt ? new Date(c.unlockAt) : undefined,
+        visibility: c.visibility === "Public" ? "Public" : "Private", // match literal type
+        mood: c.mood,
+        creator: c.creator,
+        creatorAvatar: c.creatorAvatar,
+        imageSrc: c.imageSrc,
+        content: c.content,
+        description: c.description,
+        views: c.views ?? 0,
+        bookmarked: c.bookmarked ?? false,
+        isPrivate: c.isPrivate,
+        crossed: c.crossed,
+        postText: c.postText,
+      })) as CapsuleType[] // ✅ cast สุดท้าย
+  );
+
+  const [selectedCapsule, setSelectedCapsule] = useState<CapsuleType | null>(
+    null
+  );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const toggleCreateModal = () => setIsCreateModalOpen(prev => !prev);
+  const toggleCreateModal = () => setIsCreateModalOpen((prev) => !prev);
 
   const addNewCapsule = useCallback((newCapsule: CapsuleType) => {
-    setCapsules(prev => [newCapsule, ...prev]);
+    setCapsules((prev) => [newCapsule, ...prev]);
   }, []);
 
   const timelineYears = useMemo(() => {
     if (!capsules.length) return [];
     const years = capsules.reduce((acc, capsule) => {
       const year = new Date(capsule.unlockAt || Date.now()).getFullYear();
-      if (!acc[year]) acc[year] = { capsules: [], minDate: Infinity, maxDate: -Infinity };
+      if (!acc[year])
+        acc[year] = { capsules: [], minDate: Infinity, maxDate: -Infinity };
       const ts = new Date(capsule.unlockAt || Date.now()).getTime();
       acc[year].capsules.push(capsule);
       acc[year].minDate = Math.min(acc[year].minDate, ts);
@@ -36,7 +61,9 @@ export default function ProfilePage() {
       return acc;
     }, {} as Record<number, { capsules: CapsuleType[]; minDate: number; maxDate: number }>);
 
-    const allDates = capsules.map(c => new Date(c.unlockAt || Date.now()).getTime());
+    const allDates = capsules.map((c) =>
+      new Date(c.unlockAt || Date.now()).getTime()
+    );
     const globalMinDate = Math.min(...allDates);
     const globalMaxDate = Math.max(...allDates);
     const totalRange = globalMaxDate - globalMinDate;
@@ -44,23 +71,30 @@ export default function ProfilePage() {
     return Object.entries(years)
       .map(([year, data]) => ({
         year,
-        position: totalRange > 0 ? (data.minDate - globalMinDate) / totalRange : 0,
+        position:
+          totalRange > 0 ? (data.minDate - globalMinDate) / totalRange : 0,
       }))
       .sort((a, b) => parseInt(a.year) - parseInt(b.year));
   }, [capsules]);
 
-  const calculatePositionStyle = useCallback((position: number) => ({
-    left: `${(position * 100).toFixed(4)}%`,
-    transform: "translateX(-50%)"
-  }), []);
+  const calculatePositionStyle = useCallback(
+    (position: number) => ({
+      left: `${(position * 100).toFixed(4)}%`,
+      transform: "translateX(-50%)",
+    }),
+    []
+  );
 
   const positionedCapsules = useMemo(() => {
     if (!capsules.length) return [];
     const sorted = capsules
-      .map(c => ({ ...c, timestamp: new Date(c.unlockAt || Date.now()).getTime() }))
+      .map((c) => ({
+        ...c,
+        timestamp: new Date(c.unlockAt || Date.now()).getTime(),
+      }))
       .sort((a, b) => a.timestamp - b.timestamp);
 
-    const allDates = sorted.map(c => c.timestamp);
+    const allDates = sorted.map((c) => c.timestamp);
     const minDate = Math.min(...allDates);
     const maxDate = Math.max(...allDates);
     const totalRange = maxDate - minDate;
@@ -69,16 +103,25 @@ export default function ProfilePage() {
       return sorted.map((c, i) => ({
         ...c,
         position: 0.5,
-        yOffset: (i % 2 === 0 ? 1 : -1) * Y_OFFSET_DISTANCE
+        yOffset: (i % 2 === 0 ? 1 : -1) * Y_OFFSET_DISTANCE,
       }));
 
-    const positioned = sorted.map(c => ({ ...c, position: (c.timestamp - minDate) / totalRange, yOffset: 0 }));
+    const positioned = sorted.map((c) => ({
+      ...c,
+      position: (c.timestamp - minDate) / totalRange,
+      yOffset: 0,
+    }));
 
     for (let i = 1; i < positioned.length; i++) {
       const cur = positioned[i];
       const prev = positioned[i - 1];
       if (cur.position - prev.position < NEARBY_THRESHOLD) {
-        cur.yOffset = prev.yOffset === 0 ? Y_OFFSET_DISTANCE : (prev.yOffset === Y_OFFSET_DISTANCE ? -Y_OFFSET_DISTANCE : Y_OFFSET_DISTANCE);
+        cur.yOffset =
+          prev.yOffset === 0
+            ? Y_OFFSET_DISTANCE
+            : prev.yOffset === Y_OFFSET_DISTANCE
+            ? -Y_OFFSET_DISTANCE
+            : Y_OFFSET_DISTANCE;
         if (prev.yOffset === 0) prev.yOffset = -Y_OFFSET_DISTANCE;
       } else {
         cur.yOffset = 0;
@@ -111,9 +154,13 @@ export default function ProfilePage() {
             <Avatar name="User" size={96} avatarUrl="" />
           </motion.div>
 
-          <h1 className="text-4xl font-extrabold mt-6 text-gray-900">User Name</h1>
+          <h1 className="text-4xl font-extrabold mt-6 text-gray-900">
+            User Name
+          </h1>
           <p className="text-base text-gray-600">user@example.com</p>
-          <p className="text-md text-gray-500 italic mt-2 text-center max-w-[28rem] font-light">“Tagline here”</p>
+          <p className="text-md text-gray-500 italic mt-2 text-center max-w-[28rem] font-light">
+            “Tagline here”
+          </p>
 
           <div className="mt-8 flex gap-4">
             <Link href="/profile/edit" passHref>
@@ -128,7 +175,10 @@ export default function ProfilePage() {
 
             <motion.button
               onClick={toggleCreateModal}
-              whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(0,0,0,0.4)" }}
+              whileHover={{
+                scale: 1.05,
+                boxShadow: "0 0 10px rgba(0,0,0,0.4)",
+              }}
               whileTap={{ scale: 0.95 }}
               className="px-5 py-2.5 rounded-xl bg-gray-900 hover:bg-black text-sm font-semibold border border-gray-900 shadow-lg shadow-gray-400/50 transition text-white"
             >
@@ -140,13 +190,18 @@ export default function ProfilePage() {
         {/* Timeline */}
         <section className="mt-12">
           <h2 className="text-xl font-semibold mb-8 flex items-center gap-3 border-b border-gray-200 pb-2">
-            <CalendarDays size={20} className="text-violet-500" /> Time-Warp Timeline
+            <CalendarDays size={20} className="text-violet-500" /> Time-Warp
+            Timeline
           </h2>
 
           <div className="relative w-full h-40 mt-8">
             <div className="absolute inset-x-0 top-[-1.5rem] flex justify-between h-8">
-              {timelineYears.map(item => (
-                <div key={item.year} style={calculatePositionStyle(item.position)} className="absolute text-sm font-bold text-gray-800 opacity-90">
+              {timelineYears.map((item) => (
+                <div
+                  key={item.year}
+                  style={calculatePositionStyle(item.position)}
+                  className="absolute text-sm font-bold text-gray-800 opacity-90"
+                >
                   {item.year}
                 </div>
               ))}
@@ -154,24 +209,54 @@ export default function ProfilePage() {
 
             <div className="absolute top-1/2 left-0 w-full h-[2px] -translate-y-1/2 bg-gray-300"></div>
 
-            <div className="absolute inset-0 flex items-center px-4" style={{ top: '35%' }}>
+            <div
+              className="absolute inset-0 flex items-center px-4"
+              style={{ top: "35%" }}
+            >
               {positionedCapsules.map((capsule, index) => {
                 const date = new Date(capsule.unlockAt || Date.now());
-                const label = date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+                const label = date.toLocaleDateString("en-US", {
+                  day: "numeric",
+                  month: "short",
+                });
                 return (
                   <motion.div
                     key={capsule.id}
                     initial={{ scale: 0, opacity: 0, y: -20 }}
-                    animate={{ scale: 1, opacity: 1, y: capsule.yOffset + 'px' }}
-                    transition={{ duration: 0.6, type: "spring", delay: 0.2 + index * 0.1 }}
+                    animate={{
+                      scale: 1,
+                      opacity: 1,
+                      y: capsule.yOffset + "px",
+                    }}
+                    transition={{
+                      duration: 0.6,
+                      type: "spring",
+                      delay: 0.2 + index * 0.1,
+                    }}
                     className="flex flex-col items-center group cursor-pointer absolute z-20"
                     style={calculatePositionStyle(capsule.position)}
                     onClick={() => setSelectedCapsule(capsule)}
                   >
-                    <div className="absolute w-5 h-5 rounded-full top-0 border-3 z-10 bg-violet-600" style={{ transform: 'translateY(-50%)', border: '3px solid #fff', boxShadow: '0 0 6px rgba(139,92,246,0.3)' }}></div>
-                    <div className="absolute w-5 h-5 rounded-full top-0 bg-transparent transition-all duration-300 group-hover:scale-[1.6] group-hover:shadow-[0_0_15px_#a78bfa,0_0_30px_rgba(139,92,246,0.2)] z-0" style={{ transform: 'translateY(-50%)' }}></div>
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-                      className={`text-xs font-medium text-gray-500 group-hover:text-violet-600 transition-colors ${capsule.yOffset > 0 ? 'mt-10' : 'mt-4'}`}>
+                    <div
+                      className="absolute w-5 h-5 rounded-full top-0 border-3 z-10 bg-violet-600"
+                      style={{
+                        transform: "translateY(-50%)",
+                        border: "3px solid #fff",
+                        boxShadow: "0 0 6px rgba(139,92,246,0.3)",
+                      }}
+                    ></div>
+                    <div
+                      className="absolute w-5 h-5 rounded-full top-0 bg-transparent transition-all duration-300 group-hover:scale-[1.6] group-hover:shadow-[0_0_15px_#a78bfa,0_0_30px_rgba(139,92,246,0.2)] z-0"
+                      style={{ transform: "translateY(-50%)" }}
+                    ></div>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.5 }}
+                      className={`text-xs font-medium text-gray-500 group-hover:text-violet-600 transition-colors ${
+                        capsule.yOffset > 0 ? "mt-10" : "mt-4"
+                      }`}
+                    >
                       {label}
                     </motion.div>
                   </motion.div>
@@ -187,7 +272,7 @@ export default function ProfilePage() {
             <Clock size={20} className="text-violet-500" /> My Capsules
           </h2>
           <div className="space-y-4">
-            {capsules.map(capsule => (
+            {capsules.map((capsule) => (
               <motion.div
                 key={capsule.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -230,24 +315,55 @@ export default function ProfilePage() {
                 <X size={24} />
               </button>
 
-              <h3 className="text-2xl font-bold mb-2 text-violet-600">{selectedCapsule.title}</h3>
+              <h3 className="text-2xl font-bold mb-2 text-violet-600">
+                {selectedCapsule.title}
+              </h3>
               <div className="flex items-center gap-4 text-sm text-gray-500 mb-4 border-b border-gray-200 pb-2">
-                <p>{new Date(selectedCapsule.unlockAt || Date.now()).getTime() > Date.now() ? "LOCKED until:" : "UNLOCKED on:"} {new Date(selectedCapsule.unlockAt || Date.now()).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}</p>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${selectedCapsule.visibility === 'public' ? 'bg-violet-100 text-violet-700' : 'bg-pink-100 text-pink-700'}`}>
+                <p>
+                  {new Date(selectedCapsule.unlockAt || Date.now()).getTime() >
+                  Date.now()
+                    ? "LOCKED until:"
+                    : "UNLOCKED on:"}{" "}
+                  {new Date(
+                    selectedCapsule.unlockAt || Date.now()
+                  ).toLocaleDateString("en-US", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    selectedCapsule.visibility === "Public"
+                      ? "bg-violet-100 text-violet-700"
+                      : "bg-pink-100 text-pink-700"
+                  }`}
+                >
                   {(selectedCapsule.visibility || "private").toUpperCase()}
                 </span>
               </div>
 
-              {new Date(selectedCapsule.unlockAt || Date.now()).getTime() > Date.now() ? (
+              {new Date(selectedCapsule.unlockAt || Date.now()).getTime() >
+              Date.now() ? (
                 <div className="bg-red-50 p-4 rounded-xl flex flex-col items-center justify-center text-red-600 font-semibold border border-red-200 mt-4">
                   <Lock size={24} className="mb-2" />
                   <p className="text-lg">Contents are securely time-locked.</p>
-                  <p className="text-sm font-normal text-gray-600 mt-1">Please check back on {new Date(selectedCapsule.unlockAt || Date.now()).toLocaleDateString()}</p>
+                  <p className="text-sm font-normal text-gray-600 mt-1">
+                    Please check back on{" "}
+                    {new Date(
+                      selectedCapsule.unlockAt || Date.now()
+                    ).toLocaleDateString()}
+                  </p>
                 </div>
               ) : (
                 <div className="mt-4 max-h-80 overflow-y-auto">
-                  <h4 className="font-semibold text-gray-800 mb-2 border-b pb-1">Capsule Content:</h4>
-                  <p className="text-gray-700 text-base whitespace-pre-wrap leading-relaxed">{selectedCapsule.content || "⚠️ ไม่มีเนื้อหาที่ระบุไว้สำหรับแคปซูลนี้"}</p>
+                  <h4 className="font-semibold text-gray-800 mb-2 border-b pb-1">
+                    Capsule Content:
+                  </h4>
+                  <p className="text-gray-700 text-base whitespace-pre-wrap leading-relaxed">
+                    {selectedCapsule.content ||
+                      "⚠️ ไม่มีเนื้อหาที่ระบุไว้สำหรับแคปซูลนี้"}
+                  </p>
                 </div>
               )}
             </motion.div>
