@@ -21,7 +21,7 @@ interface NavbarProps {
 }
 
 const Logo = () => (
-  <Link href="/home" aria-label="Home">
+  <Link href="/home" className="cursor-pointer" aria-label="Home">
     <div className="flex items-center justify-center">
       <Image
         src="/export-removebg-preview.png"
@@ -34,6 +34,7 @@ const Logo = () => (
   </Link>
 );
 
+// ----- Notification Types -----
 interface Notification {
   id: number;
   title: string;
@@ -47,11 +48,7 @@ interface NotificationModalProps {
   notifications: Notification[];
 }
 
-const NotificationModal = ({
-  isOpen,
-  onClose,
-  notifications,
-}: NotificationModalProps) => (
+const NotificationModal = ({ isOpen, onClose, notifications }: NotificationModalProps) => (
   <>
     <div
       className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
@@ -63,13 +60,11 @@ const NotificationModal = ({
 
     <div
       className={`fixed top-1/2 left-1/2 z-50 w-11/12 max-w-md h-[80vh] bg-white rounded-xl shadow-2xl p-4 flex flex-col transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
-        isOpen
-          ? "opacity-100 scale-100"
-          : "opacity-0 scale-95 pointer-events-none"
+        isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
       }`}
       role="dialog"
       aria-modal="true"
-      aria-label="Notifications"
+      aria-label="Notifications Modal"
     >
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">Notifications</h2>
@@ -90,9 +85,10 @@ const NotificationModal = ({
             <div
               key={n.id}
               className="notification-item bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-pointer hover:scale-105 hover:shadow-md"
+              onClick={onClose}
             >
               {n.href ? (
-                <Link href={n.href} className="block">
+                <Link href={n.href}>
                   <p className="font-semibold text-gray-900">{n.title}</p>
                   <p className="text-gray-600 text-sm">{n.description}</p>
                 </Link>
@@ -110,39 +106,68 @@ const NotificationModal = ({
   </>
 );
 
+// ----- Navbar Types -----
+interface NavItem {
+  name: string;
+  icon: typeof Home;
+  href?: string;
+}
+
+interface DropdownMenuItem {
+  name: string;
+  icon: typeof Home;
+  isDestructive?: boolean;
+  href?: string;
+}
+
 const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [activePath, setActivePath] = useState("/home");
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  // --- Notifications ---
   useEffect(() => {
     const stored = localStorage.getItem("notifications");
     if (stored) setNotifications(JSON.parse(stored));
     else {
       const initial: Notification[] = [
-        {
-          id: Date.now(),
-          title: "Upcoming Capsule",
-          description:
-            "A capsule will open in a few days! Don't forget to open it together.",
-        },
-        {
-          id: Date.now() + 1,
-          title: "Friend's Capsule",
-          description:
-            "Your friend has scheduled a capsule opening. Join in soon!",
-        },
-        {
-          id: Date.now() + 2,
-          title: "New Comment",
-          description: "Someone commented on your capsule! Check it out.",
-        },
+        { id: Date.now(), title: "Upcoming Capsule", description: "A capsule will open in a few days! Don't forget to open it together." },
+        { id: Date.now() + 1, title: "Friend's Capsule", description: "Your friend has scheduled a capsule opening. Join in soon!" },
+        { id: Date.now() + 2, title: "New Comment", description: "Someone commented on your capsule! Check it out." },
       ];
       setNotifications(initial);
       localStorage.setItem("notifications", JSON.stringify(initial));
     }
   }, []);
+
+  useEffect(() => {
+    const possibleNotifications: Omit<Notification, "id">[] = [
+      { title: "New Capsule Alert", description: "A capsule is opening soon! Don't miss it." },
+      { title: "Capsule Reminder", description: "Remember to check your upcoming capsules this week!" },
+      { title: "Friend Joined", description: "Your friend has joined a capsule opening. Get ready!" },
+      { title: "Weekly Update", description: "New capsules are available for the week. Open them now!" },
+      { title: "Special Event", description: "A special capsule event is coming soon. Be prepared!" },
+      { title: "Don't Forget", description: "Check your scheduled capsules before they open!" },
+      { title: "Team Capsule", description: "Your team has a capsule opening. Join together!" },
+      { title: "Milestone Alert", description: "A capsule has reached a milestone. See what's inside!" },
+      { title: "New Comment", description: "Someone commented on your capsule! Check it out." },
+      { title: "Friend Commented", description: "Your friend left a comment on a capsule you opened!" },
+    ];
+
+    const interval = setInterval(() => {
+      const available = possibleNotifications.filter(p => !notifications.some(n => n.title === p.title));
+      if (!available.length) return;
+
+      const random = available[Math.floor(Math.random() * available.length)];
+      const newNotification: Notification = { id: Date.now(), ...random, href: "/capsule/123" };
+      const updated = [newNotification, ...notifications];
+      setNotifications(updated);
+      localStorage.setItem("notifications", JSON.stringify(updated));
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [notifications]);
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const toggleModal = () => setModalOpen(!modalOpen);
@@ -153,7 +178,8 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
     window.location.href = "/login";
   };
 
-  const navItems = [
+  // ----- Nav Items -----
+  const navItems: NavItem[] = [
     { name: "Home", icon: Home, href: "/home" },
     { name: "Search", icon: Search, href: "/search" },
     { name: "Create", icon: PlusCircle },
@@ -161,21 +187,25 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
     { name: "Profile", icon: User, href: "/profile" },
   ];
 
-  const dropdownMenuItems = [
+  const dropdownMenuItems: DropdownMenuItem[] = [
     { name: "Log Out", icon: LogOut, isDestructive: true },
   ];
 
-  const navLinkClass = (href?: string) =>
-    `flex flex-col items-center justify-center p-2 rounded-full text-gray-500 hover:bg-gray-100 hover:text-black ${
-      activePath === href ? "text-black" : ""
-    } transition-all duration-150 ease-in-out`;
+  const navLinkClass = (href?: string) => `
+    flex flex-col items-center justify-center p-2 rounded-full
+    text-gray-500 hover:bg-gray-100 hover:text-black
+    ${activePath === href ? "text-black" : ""}
+    transition-all duration-150 ease-in-out
+  `;
 
-  const iconClass = (href?: string) =>
-    `w-7 h-7 md:w-8 md:h-8 ${
-      activePath === href ? "scale-105" : "hover:scale-105"
-    }`;
+  const iconClass = (href?: string) => `
+    w-7 h-7 md:w-8 md:h-8
+    ${activePath === href ? "scale-105" : "hover:scale-105"}
+  `;
 
-  const handleNavClick = (item: (typeof navItems)[number]) => {
+  const headerButtonClass = "p-2 rounded-full transition-colors duration-150 text-gray-500 hover:bg-gray-100 hover:text-black relative";
+
+  const handleNavClick = (item: NavItem) => {
     if (item.name === "Create" && onOpenCreateCapsule) onOpenCreateCapsule();
     else if (item.href) setActivePath(item.href);
   };
@@ -185,11 +215,7 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
       {/* Header */}
       <header className="fixed top-0 left-0 w-full h-14 z-40 flex items-center justify-between px-4 md:px-6 bg-white/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none">
         <div className="md:hidden flex items-center gap-2">
-          <button
-            className="p-2 rounded-full relative"
-            aria-label="Notifications"
-            onClick={toggleModal}
-          >
+          <button className={headerButtonClass} aria-label="Notifications" onClick={toggleModal}>
             <Bell className="w-6 h-6" />
             {notifications.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
@@ -199,17 +225,11 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
           </button>
           {currentUser && <ProfileAvatar src={currentUser.avatar} size={28} />}
         </div>
-
         <div className="md:hidden flex-1 flex justify-center absolute left-1/2 transform -translate-x-1/2">
           <Logo />
         </div>
-
         <div className="hidden md:flex items-center gap-3 ml-auto">
-          <button
-            className="p-2 rounded-full relative"
-            aria-label="Notifications"
-            onClick={toggleModal}
-          >
+          <button className={headerButtonClass} aria-label="Notifications" onClick={toggleModal}>
             <Bell className="w-6 h-6" />
             {notifications.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
@@ -219,13 +239,8 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
           </button>
           {currentUser && <ProfileAvatar src={currentUser.avatar} size={32} />}
         </div>
-
         <div className="md:hidden">
-          <button
-            onClick={toggleMenu}
-            aria-label="Menu"
-            className="p-2 rounded-full"
-          >
+          <button onClick={toggleMenu} className={headerButtonClass} aria-label="Menu">
             <Menu className="w-6 h-6" />
           </button>
         </div>
@@ -240,70 +255,81 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
           {navItems.map((item) => {
             const IconComponent = item.icon;
             return item.name === "Create" && onOpenCreateCapsule ? (
-              <button
-                key={item.name}
-                onClick={() => handleNavClick(item)}
-                className={navLinkClass()}
-                aria-label={item.name}
-              >
+              <button key={item.name} onClick={() => handleNavClick(item)} className={navLinkClass()} aria-label={item.name}>
                 <IconComponent className={iconClass()} />
               </button>
             ) : (
-              <Link
-                key={item.name}
-                href={item.href || "#"}
-                onClick={() => handleNavClick(item)}
-                className={navLinkClass(item.href)}
-                aria-label={item.name}
-              >
+              <Link key={item.name} href={item.href || "#"} onClick={() => handleNavClick(item)} className={navLinkClass(item.href)} aria-label={item.name}>
                 <IconComponent className={iconClass(item.href)} />
               </Link>
             );
           })}
         </div>
-
-        <button
-          onClick={handleLogout}
-          className="flex items-center justify-center p-2 rounded-full text-red-500 hover:bg-red-100 transition-all duration-150"
-          aria-label="Log Out"
-          title="Log Out"
-        >
-          <LogOut className="w-6 h-6" />
-        </button>
+        <div className="mb-6 mx-auto">
+          <button onClick={handleLogout} className="flex items-center justify-center p-2 rounded-full text-red-500 hover:bg-red-100 transition-all duration-150" aria-label="Log Out" title="Log Out">
+            <LogOut className="w-7 h-7" />
+          </button>
+        </div>
       </nav>
 
-      {/* Dropdown */}
+      {/* Mobile Bottom */}
+      <nav className="fixed bottom-0 left-0 w-full h-14 z-40 md:hidden bg-white/50 backdrop-blur-sm">
+        <div className="flex justify-around items-center h-full max-w-lg mx-auto">
+          {navItems.map((item) => {
+            const IconComponent = item.icon;
+            return item.name === "Create" && onOpenCreateCapsule ? (
+              <button key={item.name} onClick={() => handleNavClick(item)} className={navLinkClass()} aria-label={item.name}>
+                <IconComponent className={iconClass()} />
+              </button>
+            ) : (
+              <Link key={item.name} href={item.href || "#"} onClick={() => handleNavClick(item)} className={navLinkClass(item.href)} aria-label={item.name}>
+                <IconComponent className={iconClass(item.href)} />
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* Dropdown Menu */}
       <div
         className={`fixed top-14 right-4 md:top-auto md:bottom-6 md:left-20 z-50 w-64 md:w-80 transform transition-all duration-300 ${
-          menuOpen
-            ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
-            : "opacity-0 -translate-y-4 scale-95 pointer-events-none"
+          menuOpen ? "opacity-100 translate-y-0 scale-100 pointer-events-auto" : "opacity-0 -translate-y-4 scale-95 pointer-events-none"
         }`}
         role="menu"
         aria-orientation="vertical"
       >
         <div className="bg-white text-gray-800 p-4 rounded-xl shadow-2xl flex flex-col gap-1 border border-gray-200">
-          {dropdownMenuItems.map((item, index) => (
-            <button
-              key={index}
-              onClick={handleLogout}
-              className={`flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-200 text-left text-red-500 hover:bg-red-100`}
-              role="menuitem"
-              aria-label={item.name}
-            >
-              <item.icon className="w-5 h-5" />
-              {item.name}
-            </button>
-          ))}
+          {dropdownMenuItems.map((item, index) => {
+            const handleClick = () => {
+              if (item.name === "Log Out") handleLogout();
+              else setMenuOpen(false);
+            };
+            const MenuContent = (
+              <>
+                <item.icon className="w-5 h-5" />
+                {item.name}
+              </>
+            );
+            return (
+              <div key={index} role="none">
+                {item.href ? (
+                  <Link href={item.href} onClick={handleClick} className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${item.isDestructive ? "text-red-500 hover:bg-red-100" : "text-gray-700 hover:bg-gray-100"}`} role="menuitem">
+                    {MenuContent}
+                  </Link>
+                ) : (
+                  <button onClick={handleClick} className={`flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-200 text-left ${item.isDestructive ? "text-red-500 hover:bg-red-100" : "text-gray-700 hover:bg-gray-100"}`} role="menuitem">
+                    {MenuContent}
+                  </button>
+                )}
+                {index < dropdownMenuItems.length - 1 && <hr className="border-t border-gray-200 mt-1" role="separator" />}
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* Notification Modal */}
-      <NotificationModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        notifications={notifications}
-      />
+      <NotificationModal isOpen={modalOpen} onClose={() => setModalOpen(false)} notifications={notifications} />
     </>
   );
 };
