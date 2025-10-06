@@ -261,6 +261,15 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
             );
           })}
         </div>
+
+        <button
+          onClick={handleLogout}
+          className="flex items-center justify-center p-2 rounded-full text-red-500 hover:bg-red-100 transition-all duration-150"
+          aria-label="Log Out"
+          title="Log Out"
+        >
+          <LogOut className="w-6 h-6" />
+        </button>
       </nav>
 
       {/* Dropdown */}
