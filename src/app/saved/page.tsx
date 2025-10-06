@@ -46,7 +46,7 @@ const Page: React.FC = () => {
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
                 <FeedCapsuleCard
-                  capsule={{ ...c, bookmarked: isBookmarked(c.id) }}
+                  capsule={{ ...c, bookmarked: isBookmarked(Number(c.id)) }}
                   onBookmark={() => toggleBookmark(c)}
                   onShare={handleShare}
                   shareRef={shareRef}
@@ -59,7 +59,7 @@ const Page: React.FC = () => {
       )}
 
       {shareCapsule && shareAnchor && (
-        <ShareButton capsuleId={shareCapsule.id} shareRef={shareAnchor} />
+        <ShareButton capsuleId={Number(shareCapsule.id)} shareRef={shareAnchor} />
       )}
     </div>
   );
