@@ -6,31 +6,29 @@ import { Clock, CalendarDays, Rocket, X, Lock } from "lucide-react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import CapsuleCard from "@/components/CapsuleCard";
-import { mockCapsules } from "@/lib/mockData"; // 👈 ใช้เป็นค่าเริ่มต้นเท่านั้น
+import { mockCapsules } from "@/lib/mockData";
 import CreateCapsuleForm from "@/components/CreateCapsuleForm";
 import { useProfileStore } from "@/store/profileStore";
-import { Capsule, CapsuleType } from "@/types"; // 👈 นำเข้า Capsule และ CapsuleType
+import { Capsule } from "@/types";
 
-// ⚠️ ใช้ CapsuleType จาก CreateCapsuleForm.tsx เพื่อความสอดคล้อง
-// แต่เนื่องจาก CapsuleType ไม่ได้ถูก import ในไฟล์นี้โดยตรง (มาจาก CreateCapsuleForm)
-// และเรามี Capsule ที่ import มาแล้ว เราจะปรับให้มันเข้ากัน
+// กำหนดเกณฑ์ความใกล้ชิดสำหรับ Timeline Clustering (0.01 = 1% ของไทม์ไลน์ทั้งหมด)
+const NEARBY_THRESHOLD = 0.015;
+// กำหนดระยะการเลื่อนในแนวตั้ง
+const Y_OFFSET_DISTANCE = 30;
 
 export default function ProfilePage() {
     const { profile } = useProfileStore();
-    // 💥 1. เปลี่ยนมาใช้ state เพื่อเก็บรายการแคปซูล
     const [capsules, setCapsules] = useState<Capsule[]>(mockCapsules as Capsule[]);
     const [selectedCapsule, setSelectedCapsule] = useState<Capsule | null>(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     const toggleCreateModal = () => setIsCreateModalOpen(prev => !prev);
 
-    // 💥 2. ฟังก์ชันสำหรับเพิ่มแคปซูลใหม่
     const addNewCapsule = useCallback((newCapsule: Capsule) => {
-        setCapsules(prevCapsules => [newCapsule, ...prevCapsules]); // เพิ่มแคปซูลใหม่ที่ด้านบน
+        setCapsules(prevCapsules => [newCapsule, ...prevCapsules]);
     }, []);
 
-
-    // 💥 3. แก้ไข useMemo ให้คำนวณจาก state 'capsules'
+    // คำนวณปีสำหรับ Timeline Header (ไม่เปลี่ยนแปลงมากนัก)
     const timelineYears = useMemo(() => {
         if (!capsules.length) return [];
 
@@ -60,12 +58,11 @@ export default function ProfilePage() {
 
             return { year: year, position: position, };
         }).sort((a, b) => parseInt(a.year) - parseInt(b.year));
-    }, [capsules]); // 👈 Dependency array: อัปเดตเมื่อ 'capsules' เปลี่ยน
+    }, [capsules]);
 
     // ** 🛠️ Utility Function สำหรับป้องกัน Hydration Mismatch 🛠️ **
-    // ใช้เพื่อคำนวณตำแหน่งที่มีการปัดเศษทศนิยมที่แน่นอน
     const calculatePositionStyle = useCallback((position: number) => {
-        // Fix Hydration Mismatch: ปัดเศษทศนิยม 4 ตำแหน่งเพื่อให้ค่า string ตรงกัน
+        // Fix Hydration Mismatch: ปัดเศษทศนิยม 4 ตำแหน่ง
         const roundedPercentage = (position * 100).toFixed(4);
         return {
             left: `${roundedPercentage}%`,
@@ -74,17 +71,72 @@ export default function ProfilePage() {
     }, []);
     // ** -------------------------------------------------------- **
 
+    // 🚀 NEW: คำนวณตำแหน่งและ Offset สำหรับจุด Capsule
+    const positionedCapsules = useMemo(() => {
+        if (!capsules.length) return [];
+
+        const sortedCapsules = capsules
+            .map(c => ({
+                ...c,
+                timestamp: new Date(c.unlockAt).getTime()
+            }))
+            .sort((a, b) => a.timestamp - b.timestamp);
+
+        const allDates = sortedCapsules.map(c => c.timestamp);
+        const globalMinDate = Math.min(...allDates);
+        const globalMaxDate = Math.max(...allDates);
+        const totalRange = globalMaxDate - globalMinDate;
+
+        if (totalRange <= 0) {
+            // กรณีมีแคปซูลเดียวหรือทุกแคปซูลมีวันปลดล็อคเดียวกัน
+            return sortedCapsules.map((c, index) => ({
+                ...c,
+                position: 0.5, // วางไว้ตรงกลาง
+                yOffset: (index % 2 === 0 ? 1 : -1) * Y_OFFSET_DISTANCE // สลับขึ้นลง
+            }));
+        }
+
+        const positioned = sortedCapsules.map(c => ({
+            ...c,
+            position: (c.timestamp - globalMinDate) / totalRange,
+            yOffset: 0, // ค่าเริ่มต้น
+        }));
+
+        // ** Logic สำหรับการเพิ่ม Vertical Offset (Clustering) **
+        for (let i = 1; i < positioned.length; i++) {
+            const current = positioned[i];
+            const previous = positioned[i - 1];
+
+            // ตรวจสอบความใกล้ชิดตาม NEARBY_THRESHOLD
+            if (current.position - previous.position < NEARBY_THRESHOLD) {
+                // ถ้าใกล้กัน ให้สลับตำแหน่ง: จุดปัจจุบันเลื่อนลง, จุดก่อนหน้าเลื่อนขึ้น (ถ้ายังไม่เลื่อน)
+                current.yOffset = Y_OFFSET_DISTANCE;
+                if (previous.yOffset === 0) {
+                    previous.yOffset = -Y_OFFSET_DISTANCE;
+                } else {
+                    // ถ้าจุดก่อนหน้าถูกเลื่อนแล้ว (เช่น จากแคปซูล i-2) ก็ให้เลื่อนจุดปัจจุบันเพิ่มขึ้นไปอีก
+                    // แต่ในกรณีนี้เราจะใช้แค่ 2 ระดับ (-Y_OFFSET_DISTANCE, +Y_OFFSET_DISTANCE) เพื่อความเรียบง่าย
+                    // หรือจะเลื่อนให้จุดปัจจุบันเป็นชั้นต่อไปก็ได้ (เช่น -30, 30, -60, 60...)
+                    // แต่สำหรับโค้ดนี้จะใช้แค่ 2 ชั้น
+                    current.yOffset = previous.yOffset === Y_OFFSET_DISTANCE ? -Y_OFFSET_DISTANCE : Y_OFFSET_DISTANCE;
+                }
+            } else {
+                current.yOffset = 0;
+            }
+        }
+
+        return positioned;
+    }, [capsules]);
+
 
     return (
-        // ********** ⚪️ ธีมสีขาวมินิมอล (Minimal White) ⚪️ **********
-        // 🚀 แก้ไข: เปลี่ยน py-8 เป็น pt-24 เพื่อเลื่อนเนื้อหาลงมาให้พ้น Navbar
         <main className="min-h-screen bg-white text-gray-900 relative overflow-hidden px-6 pt-24 pb-20">
-                    
-            {/* 💥 4. Modal Form สร้างแคปซูลใหม่: ส่งฟังก์ชัน onCreate */}
+
+            {/* Modal Form สร้างแคปซูลใหม่ */}
             <AnimatePresence>
                 {isCreateModalOpen && (
                     <CreateCapsuleForm
-                        onCreate={addNewCapsule as any} // 👈 ส่งฟังก์ชันเพิ่มแคปซูล
+                        onCreate={addNewCapsule}
                         onClose={() => setIsCreateModalOpen(false)}
                     />
                 )}
@@ -93,7 +145,7 @@ export default function ProfilePage() {
 
             <div className="max-w-3xl mx-auto relative z-10 pb-20">
 
-                {/* Header Section (โค้ดส่วนนี้ไม่ได้เปลี่ยนแปลง) */}
+                {/* Header Section (ไม่เปลี่ยนแปลง) */}
                 <section className="flex flex-col items-center mb-12">
                     <motion.div
                         initial={{ scale: 0.5, rotate: -180, opacity: 0 }}
@@ -123,7 +175,7 @@ export default function ProfilePage() {
                             </motion.button>
                         </Link>
 
-                        {/* 💥 2. ปุ่ม New Capsule: ใช้ onClick={toggleCreateModal} */}
+                        {/* ปุ่ม New Capsule */}
                         <motion.button
                             onClick={toggleCreateModal}
                             whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(0, 0, 0, 0.4)" }}
@@ -141,13 +193,13 @@ export default function ProfilePage() {
                         <CalendarDays size={20} className="text-violet-500" /> Time-Warp Timeline
                     </h2>
 
-                    <div className="relative w-full h-24 mt-4">
-                        {/* Year Labels */}
+                    {/* 🚀 แก้ไข: เพิ่ม h-40 เพื่อรองรับการเลื่อนจุดขึ้นลง */}
+                    <div className="relative w-full h-40 mt-8"> 
+                        {/* Year Labels (ใช้ตำแหน่งเดิม) */}
                         <div className="absolute inset-x-0 top-[-1.5rem] flex justify-between h-8">
                             {timelineYears.map((item) => (
                                 <div
                                     key={item.year}
-                                    // 🚀 FIX: ใช้ calculatePositionStyle ที่มี .toFixed(4)
                                     style={calculatePositionStyle(item.position)}
                                     className="absolute text-sm font-bold text-gray-800 opacity-90"
                                 >
@@ -164,82 +216,73 @@ export default function ProfilePage() {
                             }}
                         ></div>
 
-                        {/* Capsule points */}
-                        <div className="absolute inset-0 flex items-center px-4 pt-0">
-                            {capsules // 👈 ใช้ state 'capsules'
-                                .sort((a, b) => new Date(a.unlockAt).getTime() - new Date(b.unlockAt).getTime())
-                                .map((capsule, index) => {
-                                    const date = new Date(capsule.unlockAt);
-                                    const label = date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+                        {/* Capsule points - ใช้ positionedCapsules และ yOffset */}
+                        {/* 🚀 แก้ไข: เปลี่ยน top-1/2 เป็น top-[35%] และปรับ padding-x */}
+                        <div className="absolute inset-0 flex items-center px-4" style={{ top: '35%' }}>
+                            {positionedCapsules.map((capsule, index) => { // 👈 ใช้ positionedCapsules
+                                const date = new Date(capsule.unlockAt);
+                                const label = date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+                                const dotColorClass = 'bg-violet-600';
 
-                                    const allDates = capsules.map(c => new Date(c.unlockAt).getTime()); // 👈 ใช้ state 'capsules'
-                                    const globalMinDate = Math.min(...allDates);
-                                    const globalMaxDate = Math.max(...allDates);
-                                    const totalRange = globalMaxDate - globalMinDate;
-                                    const position = totalRange > 0
-                                        ? (date.getTime() - globalMinDate) / totalRange
-                                        : 0;
+                                return (
+                                    <motion.div
+                                        key={capsule.id}
+                                        initial={{ scale: 0, opacity: 0, y: -20 }}
+                                        // 🚀 แก้ไข: ใช้ y: capsule.yOffset + 'px' เพื่อเลื่อนตาม offset
+                                        animate={{ scale: 1, opacity: 1, y: capsule.yOffset + 'px' }} 
+                                        transition={{ duration: 0.6, type: "spring", delay: 0.2 + index * 0.1 }}
+                                        className="flex flex-col items-center group cursor-pointer absolute z-20"
+                                        // 🚀 แก้ไข: ใช้ capsule.position
+                                        style={calculatePositionStyle(capsule.position)} 
+                                        onClick={() => setSelectedCapsule(capsule)}
+                                    >
+                                        {/* **จุด Capsule (Base Dot)** */}
+                                        <div
+                                            className={`absolute w-5 h-5 rounded-full top-0 border-3 transition-all duration-400 ease-out z-10 ${dotColorClass}`}
+                                            style={{
+                                                background: '',
+                                                boxShadow: '0 0 6px rgba(139, 92, 246, 0.3)',
+                                                border: '3px solid #ffffff',
+                                                transform: 'translateY(-50%)'
+                                            }}
+                                        ></div>
+                                        
+                                        {/* **จุด Capsule (Hover Effect Overlay)** */}
+                                        <div
+                                            className="absolute w-5 h-5 rounded-full top-0 bg-transparent transition-all duration-300 group-hover:scale-[1.6] group-hover:shadow-[0_0_15px_#a78bfa,0_0_30px_rgba(139,92,246,0.2)] z-0"
+                                            style={{
+                                                transform: 'translateY(-50%)'
+                                            }}
+                                        ></div>
 
-                                    const dotColorClass = 'bg-violet-600';
-
-                                    return (
+                                        {/* 🚀 แก้ไข: ตำแหน่ง Label ต้องอยู่ด้านล่างเสมอ (mt-4) */}
                                         <motion.div
-                                            key={capsule.id}
-                                            initial={{ scale: 0, opacity: 0, y: -20 }}
-                                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                                            transition={{ duration: 0.6, type: "spring", delay: 0.2 + index * 0.1 }}
-                                            className="flex flex-col items-center group cursor-pointer absolute z-20"
-                                            // 🚀 FIX: ใช้ calculatePositionStyle ที่มี .toFixed(4)
-                                            style={calculatePositionStyle(position)}
-                                            onClick={() => setSelectedCapsule(capsule)}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            transition={{ delay: 0.5 }}
+                                            // 🚀 แก้ไข: ถ้ามี yOffset เป็นบวก (เลื่อนลง) ให้ขยับ label ลงอีกเล็กน้อย
+                                            className={`text-xs font-medium text-gray-500 group-hover:text-violet-600 transition-colors ${capsule.yOffset > 0 ? 'mt-10' : 'mt-4'}`}
                                         >
-                                            {/* **จุด Capsule (Base Dot)** */}
-                                            <div
-                                                className={`absolute w-5 h-5 rounded-full top-0 border-3 transition-all duration-400 ease-out z-10 ${dotColorClass}`}
-                                                style={{
-                                                    background: '',
-                                                    boxShadow: '0 0 6px rgba(139, 92, 246, 0.3)',
-                                                    border: '3px solid #ffffff',
-                                                    transform: 'translateY(-50%)'
-                                                }}
-                                            ></div>
-
-                                            {/* **จุด Capsule (Hover Effect Overlay)** */}
-                                            <div
-                                                className="absolute w-5 h-5 rounded-full top-0
-                                        bg-transparent transition-all duration-300 group-hover:scale-[1.6] group-hover:shadow-[0_0_15px_#a78bfa,0_0_30px_rgba(139,92,246,0.2)] z-0"
-                                                style={{
-                                                    transform: 'translateY(-50%)'
-                                                }}
-                                            ></div>
-
-                                            <motion.div
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                transition={{ delay: 0.5 }}
-                                                className="mt-4 text-xs font-medium text-gray-500 group-hover:text-violet-600 transition-colors"
-                                            >
-                                                {label}
-                                            </motion.div>
+                                            {label}
                                         </motion.div>
-                                    );
-                                })}
+                                    </motion.div>
+                                );
+                            })}
                         </div>
                     </div>
                 </section>
 
-                {/* 💖 Capsules Section 💖 (โค้ดส่วนนี้แก้ไขให้ใช้ 'capsules' แทน 'mockCapsules') */}
+                {/* 💖 Capsules Section 💖 (ไม่เปลี่ยนแปลง) */}
                 <section className="mt-12">
                     <h2 className="text-xl font-semibold mb-6 flex items-center gap-3 border-b border-gray-200 pb-2">
                         <Clock size={20} className="text-violet-500" /> My Capsules
                     </h2>
                     <div className="space-y-4">
-                        {capsules.map((capsule) => ( // 👈 ใช้ state 'capsules'
+                        {capsules.map((capsule) => (
                             <motion.div
                                 key={capsule.id}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                // 💥 Transition delay ไม่จำเป็นต้องใช้ index ถ้าแคปซูลใหม่ถูกเพิ่มไปด้านหน้า
                                 transition={{ duration: 0.5 }} 
                                 onClick={() => setSelectedCapsule(capsule)}
                                 className="cursor-pointer"
@@ -252,7 +295,7 @@ export default function ProfilePage() {
 
             </div>
 
-            {/* ===== Capsule Modal - แก้ไข Logic การแสดงเนื้อหาตามสถานะ Lock ===== */}
+            {/* ===== Capsule Modal - ไม่เปลี่ยนแปลง ===== */}
             <AnimatePresence>
                 {selectedCapsule && (
                     <motion.div
@@ -298,7 +341,7 @@ export default function ProfilePage() {
                                 </span>
                             </div>
 
-                            {/* 💥 Conditional Content: แสดงรายละเอียดหรือข้อความล็อค */}
+                            {/* Conditional Content: แสดงรายละเอียดหรือข้อความล็อค */}
                             {new Date(selectedCapsule.unlockAt).getTime() > Date.now() ? (
                                 // 🔒 LOCKED: แสดงข้อความล็อค
                                 <div className="bg-red-50 p-4 rounded-xl flex flex-col items-center justify-center text-red-600 font-semibold border border-red-200 mt-4">
