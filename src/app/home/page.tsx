@@ -28,18 +28,26 @@ const ALL_CAPSULES: CapsuleType[] = posts
     };
     const mood = moodOptions[i % moodOptions.length];
 
+    // ✅ map visibility ให้ตรง literal type
+    const visibility: "private" | "public" = i % 3 === 0 ? "private" : "public";
+
     return {
-      id: i,
+      id: String(i),
       title,
       content: `This is a future note from User ${i + 1}.`,
+      description: `A brief description for User ${i + 1}.`,
       creator: `${user.name.first} ${user.name.last}`,
       creatorAvatar: user.picture.large,
       imageSrc: `https://picsum.photos/seed/${i}/600/400`,
       mood,
       targetDate: new Date(Date.now() + (i + 1) * 86400000),
+      unlockAt: new Date(Date.now() + (i + 1) * 86400000),
       views: Math.floor(Math.random() * 9999) + 100,
       bookmarked: false,
+      visibility, // ✅ ตอนนี้ตรง type
       isPrivate: i % 3 === 0,
+      crossed: false,
+      postText: "",
     };
   })
   .reverse();
@@ -166,7 +174,7 @@ const HomePage: React.FC = () => {
           <PopularMemories
             popularCapsules={popularCapsules.map((c) => ({
               ...c,
-              bookmarked: isBookmarked(c.id),
+              bookmarked: isBookmarked(Number(c.id)),
             }))}
             onBookmark={toggleBookmark}
             onShare={handleSharePopular}
@@ -190,7 +198,7 @@ const HomePage: React.FC = () => {
             return (
               <FeedCapsuleCard
                 key={c.id}
-                capsule={{ ...c, bookmarked: isBookmarked(c.id) }}
+                capsule={{ ...c, bookmarked: isBookmarked(Number(c.id)) }}
                 onBookmark={() => toggleBookmark(c)}
                 size="large"
                 onShare={handleShareFeed}
@@ -218,7 +226,10 @@ const HomePage: React.FC = () => {
       </section>
 
       {shareCapsule && shareAnchor && (
-        <ShareButton capsuleId={shareCapsule.id} shareRef={shareAnchor} />
+        <ShareButton
+          capsuleId={Number(shareCapsule.id)}
+          shareRef={shareAnchor}
+        />
       )}
     </div>
   );

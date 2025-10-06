@@ -112,6 +112,7 @@ export default function ProfileEditPage() {
                                 accept="image/*" 
                                 // 🚀 NEW: เมื่อมีการเลือกไฟล์, เรียกใช้ handleAvatarChange
                                 onChange={handleAvatarChange} 
+                                title="รูป"
                             />
                             <Upload size={16} className="inline mr-2" />
                             Upload Avatar
