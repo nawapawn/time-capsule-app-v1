@@ -14,16 +14,20 @@ export const moodOptions = [
 export interface CapsuleType {
   id: number;
   title: string;
+  content: string; // ข้อความหลักของ Capsule
+  description?: string; // ถ้ามีรายละเอียดเพิ่มเติม
   creator: string;
   creatorAvatar: string;
   imageSrc?: string;
-  mood: typeof moodOptions[number]; // ต้องมี name, emoji, color ครบ
+  mood: (typeof moodOptions)[number]; // ต้องมี name, emoji, color ครบ
   targetDate: Date;
+  unlockAt?: Date; // รองรับ field ที่ ProfilePage ต้องการ
+  visibility?: "private" | "public"; // เพิ่ม field visibility
   views: number;
   bookmarked: boolean;
-  content?: string;   // ข้อความหลักของ Capsule
-  postText?: string;  // ข้อความบันทึกแรก
-  isPrivate?: boolean; // 💥 เพิ่ม field นี้ให้รองรับฟอร์มสร้าง Capsule
+  isPrivate?: boolean; // 💥 สำหรับฟอร์มสร้าง Capsule
+  crossed?: boolean; // ใช้ใน capsuleStore
+  postText?: string; // ข้อความบันทึกแรก
 }
 
 // ฟังก์ชัน format views
@@ -33,5 +37,5 @@ export const formatViews = (views: number) =>
 // ฟังก์ชันช่วยดึง postText แบบบันทึกแรก
 import { posts } from "@/data/posts";
 export const getFirstPostText = (capsule: CapsuleType): string => {
-  return capsule.postText || posts[0];
+  return capsule.postText || posts[0] || "";
 };
