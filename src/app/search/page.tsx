@@ -19,22 +19,30 @@ const SearchPage: React.FC = () => {
   const [results, setResults] = useState<CapsuleType[]>([]);
   const [loading, setLoading] = useState(false);
   const [shareCapsule, setShareCapsule] = useState<CapsuleType | null>(null);
-  const [shareAnchor, setShareAnchor] = useState<RefObject<HTMLButtonElement | null> | null>(null);
+  const [shareAnchor, setShareAnchor] =
+    useState<RefObject<HTMLButtonElement | null> | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const usersRes = await fetch(`https://randomuser.me/api/?results=${posts.length}&inc=name,picture,login`);
+        const usersRes = await fetch(
+          `https://randomuser.me/api/?results=${posts.length}&inc=name,picture,login`
+        );
         const usersData = await usersRes.json();
         const users: RandomUser[] = usersData.results;
 
         const capsules: CapsuleType[] = posts.map((title, i) => {
           const user = users[i];
           const mood = moodOptions[i % moodOptions.length];
+          const capsuleId = (
+            parseInt(user.login.uuid.replace(/-/g, ""), 16) % 1000000
+          ).toString(); // number
+
           return {
-            id: parseInt(user.login.uuid.replace(/-/g, ""), 16) % 1000000,
+            id: capsuleId, // ✅ number
             title,
+            content: `This is a content for ${title}`, // ✅ content ต้องมี
             creator: `${user.name.first} ${user.name.last}`,
             creatorAvatar: user.picture.large,
             imageSrc: `https://picsum.photos/seed/${i}/400/600`,
@@ -61,7 +69,10 @@ const SearchPage: React.FC = () => {
       c.creator.toLowerCase().startsWith(query.toLowerCase())
   );
 
-  const handleShare = (capsule: CapsuleType, ref: RefObject<HTMLButtonElement | null>) => {
+  const handleShare = (
+    capsule: CapsuleType,
+    ref: RefObject<HTMLButtonElement | null>
+  ) => {
     setShareCapsule(capsule);
     setShareAnchor(ref);
   };
@@ -82,7 +93,11 @@ const SearchPage: React.FC = () => {
         />
       </div>
 
-      {loading && <p className="text-gray-500 dark:text-gray-400 mb-4 transition-colors">Loading...</p>}
+      {loading && (
+        <p className="text-gray-500 dark:text-gray-400 mb-4 transition-colors">
+          Loading...
+        </p>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 w-full max-w-6xl">
         {filteredResults.length > 0
@@ -96,7 +111,7 @@ const SearchPage: React.FC = () => {
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
                   <FeedCapsuleCard
-                    capsule={{ ...c, bookmarked: isBookmarked(c.id) }}
+                    capsule={{ ...c, bookmarked: isBookmarked(Number(c.id)) }}
                     onBookmark={() => toggleBookmark(c)}
                     onShare={handleShare}
                     shareRef={shareRef}
@@ -113,7 +128,10 @@ const SearchPage: React.FC = () => {
       </div>
 
       {shareCapsule && shareAnchor && (
-        <ShareButton capsuleId={shareCapsule.id} shareRef={shareAnchor} />
+        <ShareButton
+          capsuleId={Number(shareCapsule.id)}
+          shareRef={shareAnchor}
+        />
       )}
     </div>
   );
