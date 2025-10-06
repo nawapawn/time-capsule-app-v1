@@ -11,7 +11,7 @@ import PopularMemories from "@/components/Home/PopularMemories";
 import ShareButton from "@/components/Home/ShareButton";
 import CreateCapsuleForm from "@/components/CreateCapsuleForm";
 import Navbar from "@/components/Navbar";
-import { CapsuleType, moodOptions } from "@/utils/capsuleUtils";
+import { CapsuleType, moodOptions } from "@/utils/capsuleUtils"; // <--- Import ถูกต้อง
 import { posts } from "@/data/posts";
 import { useCapsule } from "@/context/CapsuleContext";
 
@@ -140,7 +140,7 @@ const HomePage: React.FC = () => {
     setShareAnchor(ref);
   };
 
-  const handleCreateCapsule = (newCapsule: CapsuleType) => {
+  const handleCreateCapsule = (newCapsule: CapsuleType) => { // <--- ฟังก์ชันที่ใช้ CapsuleType ถูกต้อง
     setFeedData((prev) => [newCapsule, ...prev]);
     setShowCreateCapsuleForm(false);
   };
@@ -151,7 +151,7 @@ const HomePage: React.FC = () => {
 
       {showCreateCapsuleForm && (
         <CreateCapsuleForm
-          onCreate={handleCreateCapsule}
+          onCreate={handleCreateCapsule} // <--- ส่งฟังก์ชันนี้
           onClose={() => setShowCreateCapsuleForm(false)}
         />
       )}
