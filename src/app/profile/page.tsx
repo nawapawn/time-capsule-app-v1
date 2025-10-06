@@ -10,19 +10,23 @@ import { mockCapsules } from "@/lib/mockData";
 import CreateCapsuleForm from "@/components/CreateCapsuleForm";
 import { CapsuleType } from "@/utils/capsuleUtils";
 import { moodOptions } from "@/utils/capsuleUtils";
+import { useProfileStore } from "@/store/profileStore";
+
 
 const NEARBY_THRESHOLD = 0.015;
 const Y_OFFSET_DISTANCE = 30;
 
 export default function ProfilePage() {
+const profile = useProfileStore((state) => state.profile);
+
   const [capsules, setCapsules] = useState<CapsuleType[]>(
     () =>
       mockCapsules.map((c) => ({
         ...c,
-        id: String(c.id), // ถ้า original เป็น number
+        id: String(c.id),
         targetDate: new Date(c.targetDate),
         unlockAt: c.unlockAt ? new Date(c.unlockAt) : undefined,
-        visibility: c.visibility === "public" ? "Public" : "private", // match literal type
+        visibility: c.visibility === "public" ? "Public" : "private",
         mood: c.mood,
         creator: c.creator,
         creatorAvatar: c.creatorAvatar,
@@ -34,14 +38,13 @@ export default function ProfilePage() {
         isPrivate: c.isPrivate,
         crossed: c.crossed,
         postText: c.postText,
-      })) as CapsuleType[] // ✅ cast สุดท้าย
+      })) as CapsuleType[]
   );
 
   const [selectedCapsule, setSelectedCapsule] = useState<CapsuleType | null>(
     null
   );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-
   const toggleCreateModal = () => setIsCreateModalOpen((prev) => !prev);
 
   const addNewCapsule = useCallback((newCapsule: CapsuleType) => {
@@ -155,11 +158,11 @@ export default function ProfilePage() {
           </motion.div>
 
           <h1 className="text-4xl font-extrabold mt-6 text-gray-900">
-            User Name
+            {profile.name}
           </h1>
-          <p className="text-base text-gray-600">user@example.com</p>
+          <p className="text-base text-gray-600">{profile.email}</p>
           <p className="text-md text-gray-500 italic mt-2 text-center max-w-[28rem] font-light">
-            “Tagline here”
+            “{profile.tagline}”
           </p>
 
           <div className="mt-8 flex gap-4">
