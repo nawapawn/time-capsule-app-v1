@@ -11,13 +11,11 @@ import CapsuleCard from "@/components/CapsuleCard";
 import { mockCapsules } from "@/lib/mockData";
 import { Capsule } from "@/types";
 import { useProfileStore } from "@/store/profileStore";
-// 💥 นำเข้า Component สำหรับสร้างแคปซูล (โครงสร้างไฟล์ที่จำได้: src\components\CreateCapsuleForm.tsx)
 import CreateCapsuleForm from "@/components/CreateCapsuleForm"; 
 
 export default function ProfilePage() {
     const { profile } = useProfileStore();
     const [selectedCapsule, setSelectedCapsule] = useState<Capsule | null>(null);
-    // 💥 State สำหรับควบคุม Modal Form สร้างแคปซูลใหม่ (ค่าเริ่มต้นคือ false)
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     const toggleCreateModal = () => setIsCreateModalOpen(prev => !prev);
@@ -58,38 +56,33 @@ export default function ProfilePage() {
         // ********** ⚪️ ธีมสีขาวมินิมอล (Minimal White) ⚪️ **********
         <main className="min-h-screen bg-white text-gray-900 relative overflow-hidden px-6 py-8">
             
-            {/* 💥 1. Modal Form สร้างแคปซูลใหม่ (แก้ไข: ใช้ AnimatePresence และ Conditional Rendering) */}
+            {/* 💥 1. Modal Form สร้างแคปซูลใหม่ */}
             <AnimatePresence>
                 {isCreateModalOpen && (
                     <CreateCapsuleForm 
-                        // เราไม่ต้องส่ง show prop อีกแล้ว เพราะเราใช้ Conditional Rendering 
                         onClose={() => setIsCreateModalOpen(false)} 
                     />
                 )}
             </AnimatePresence>
-            {/* หาก CreateCapsuleForm มีการใช้ Framer Motion ภายในตัวเอง, AnimatePresence จะจัดการการ Fade-out เมื่อ state เป็น false */}
 
 
             <div className="max-w-3xl mx-auto relative z-10 pb-20">
 
-                {/* Header Section */}
+                {/* Header Section (โค้ดส่วนนี้ไม่ได้เปลี่ยนแปลง) */}
                 <section className="flex flex-col items-center mb-12">
                     <motion.div
                         initial={{ scale: 0.5, rotate: -180, opacity: 0 }}
                         animate={{ scale: 1, rotate: 0, opacity: 1 }}
                         transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
-                        // Border/Background สำหรับธีมขาวมินิมอล
                         className="w-32 h-32 rounded-full bg-gray-50 flex items-center justify-center border border-gray-200 shadow-md"
                     >
                         <Avatar name={profile.name} size={96} avatarUrl={profile.avatarUrl} />
                     </motion.div>
 
-                    {/* ข้อความชื่อ/อีเมล เป็นสีดำ/เทาเข้ม */}
                     <h1 className="text-4xl font-extrabold mt-6 text-gray-900">
                         {profile.name}
                     </h1>
                     <p className="text-base text-gray-600">{profile.email}</p>
-                    {/* Tagline ใช้สีเทาอ่อนลง */}
                     <p className="text-md text-gray-500 italic mt-2 text-center max-w-[28rem] font-light">
                         “{profile.tagline}”
                     </p>
@@ -99,7 +92,6 @@ export default function ProfilePage() {
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                // ปุ่ม Edit Profile ธีมขาวมินิมอล
                                 className="px-5 py-2.5 rounded-xl bg-white hover:bg-gray-50 text-sm border border-gray-300 shadow-sm transition text-gray-700"
                             >
                                 Edit Profile
@@ -108,10 +100,9 @@ export default function ProfilePage() {
 
                         {/* 💥 2. ปุ่ม New Capsule: ใช้ onClick={toggleCreateModal} */}
                         <motion.button
-                            onClick={toggleCreateModal} // 👈 ฟังก์ชันเปิด Modal
+                            onClick={toggleCreateModal}
                             whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(0, 0, 0, 0.4)" }}
                             whileTap={{ scale: 0.95 }}
-                            // 🖤 ปุ่ม New Capsule: เปลี่ยนเป็นสีดำ Solid
                             className="px-5 py-2.5 rounded-xl bg-gray-900 hover:bg-black text-sm font-semibold border border-gray-900 shadow-lg shadow-gray-400/50 transition text-white"
                         >
                             <Rocket size={16} className="inline mr-2" /> New Capsule
@@ -119,9 +110,8 @@ export default function ProfilePage() {
                     </div>
                 </section>
 
-                {/* 🌟 Timeline Calendar 🌟 */}
+                {/* 🌟 Timeline Calendar 🌟 (โค้ดส่วนนี้ไม่ได้เปลี่ยนแปลง) */}
                 <section className="mt-12">
-                    {/* Title */}
                     <h2 className="text-xl font-semibold mb-8 flex items-center gap-3 border-b border-gray-200 pb-2">
                         <CalendarDays size={20} className="text-violet-500" /> Time-Warp Timeline
                     </h2>
@@ -133,7 +123,6 @@ export default function ProfilePage() {
                                 <div
                                     key={item.year}
                                     style={{ left: `${item.position * 100}%`, transform: 'translateX(-50%)' }}
-                                    // ⚪️ Year Label ใช้สีเทาเข้ม
                                     className="absolute text-sm font-bold text-gray-800 opacity-90"
                                 >
                                     {item.year}
@@ -141,11 +130,10 @@ export default function ProfilePage() {
                             ))}
                         </div>
 
-                        {/* Timeline line - ❌ นำ Gradient ออก, ใช้สีเทาอ่อน solid แทน */}
+                        {/* Timeline line */}
                         <div
                             className="absolute top-1/2 left-0 w-full h-[2px] -translate-y-1/2 bg-gray-300"
                             style={{
-                                // ❌ ไม่มี background gradient
                                 boxShadow: 'none',
                             }}
                         ></div>
@@ -166,7 +154,6 @@ export default function ProfilePage() {
                                         ? (date.getTime() - globalMinDate) / totalRange
                                         : 0;
 
-                                    // ⚪️ ใช้สีม่วง Solid สำหรับจุดที่ Active/Hover
                                     const dotColorClass = 'bg-violet-600';
 
                                     return (
@@ -179,12 +166,12 @@ export default function ProfilePage() {
                                             style={{ left: `${position * 100}%`, transform: 'translateX(-50%)' }}
                                             onClick={() => setSelectedCapsule(capsule)}
                                         >
-                                            {/* **จุด Capsule (Base Dot)** - ❌ นำ Gradient ออก, ใช้สีม่วง Solid */}
+                                            {/* **จุด Capsule (Base Dot)** */}
                                             <div
                                                 className={`absolute w-5 h-5 rounded-full top-0 border-3 transition-all duration-400 ease-out z-10 ${dotColorClass}`}
                                                 style={{
-                                                    background: '', // ❌ ไม่มี background (ใช้ Tailwind class)
-                                                    boxShadow: '0 0 6px rgba(139, 92, 246, 0.3)', // Shadow สีม่วง
+                                                    background: '',
+                                                    boxShadow: '0 0 6px rgba(139, 92, 246, 0.3)',
                                                     border: '3px solid #ffffff',
                                                     transform: 'translateY(-50%)'
                                                 }}
@@ -193,7 +180,7 @@ export default function ProfilePage() {
                                             {/* **จุด Capsule (Hover Effect Overlay)** */}
                                             <div
                                                 className="absolute w-5 h-5 rounded-full top-0 
-                                                            bg-transparent transition-all duration-300 group-hover:scale-[1.6] group-hover:shadow-[0_0_15px_#a78bfa,0_0_30px_rgba(139,92,246,0.2)] z-0"
+                                                        bg-transparent transition-all duration-300 group-hover:scale-[1.6] group-hover:shadow-[0_0_15px_#a78bfa,0_0_30px_rgba(139,92,246,0.2)] z-0"
                                                 style={{
                                                     transform: 'translateY(-50%)'
                                                 }}
@@ -214,7 +201,7 @@ export default function ProfilePage() {
                     </div>
                 </section>
 
-                {/* 💖 Capsules Section 💖 */}
+                {/* 💖 Capsules Section 💖 (โค้ดส่วนนี้ไม่ได้เปลี่ยนแปลง) */}
                 <section className="mt-12">
                     <h2 className="text-xl font-semibold mb-6 flex items-center gap-3 border-b border-gray-200 pb-2">
                         <Clock size={20} className="text-violet-500" /> My Capsules
@@ -237,7 +224,7 @@ export default function ProfilePage() {
 
             </div>
 
-            {/* ===== Capsule Modal - ธีมขาวมินิมอล/Solid Text (สำหรับดูรายละเอียดแคปซูล) ===== */}
+            {/* ===== Capsule Modal - แก้ไข Logic การแสดงเนื้อหาตามสถานะ Lock ===== */}
             <AnimatePresence>
                 {selectedCapsule && (
                     <motion.div
@@ -248,7 +235,6 @@ export default function ProfilePage() {
                         onClick={() => setSelectedCapsule(null)}
                     >
                         <motion.div
-                            // Glassmorphism effect ธีมขาวมินิมอล
                             className="rounded-3xl p-8 max-w-md w-full relative bg-white/70 backdrop-blur-xl border border-gray-100 shadow-lg"
                             initial={{ scale: 0.7, opacity: 0, rotateX: 30 }}
                             animate={{ scale: 1, opacity: 1, rotateX: 0 }}
@@ -257,14 +243,13 @@ export default function ProfilePage() {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <button
-                                // ปุ่มปิดใช้สีเทาเรียบๆ
                                 className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 transition"
                                 onClick={() => setSelectedCapsule(null)}
                             >
                                 <X size={24} />
                             </button>
 
-                            {/* Modal Title - ใช้สี Solid เน้น */}
+                            {/* Modal Title */}
                             <h3 className="text-2xl font-bold mb-2 text-violet-600">
                                 {selectedCapsule.title}
                             </h3>
@@ -285,11 +270,25 @@ export default function ProfilePage() {
                                 </span>
                             </div>
 
-                            {/* Lock Message */}
-                            <div className="bg-pink-50 p-3 rounded-lg flex items-center justify-center text-pink-600 font-semibold border border-pink-100">
-                                <Lock size={16} className="mr-2" />
-                                Contents are securely time-locked until the unlock date.
-                            </div>
+                            {/* 💥 Conditional Content: แสดงรายละเอียดหรือข้อความล็อค */}
+                            {new Date(selectedCapsule.unlockAt).getTime() > Date.now() ? (
+                                // 🔒 LOCKED: แสดงข้อความล็อค
+                                <div className="bg-red-50 p-4 rounded-xl flex flex-col items-center justify-center text-red-600 font-semibold border border-red-200 mt-4">
+                                    <Lock size={24} className="mb-2" />
+                                    <p className="text-lg">Contents are securely **time-locked**.</p>
+                                    <p className="text-sm font-normal text-gray-600 mt-1">
+                                        Please check back on{new Date(selectedCapsule.unlockAt).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            ) : (
+                                // ✅ UNLOCKED: แสดงเนื้อหาจริง
+                                <div className="mt-4 max-h-80 overflow-y-auto">
+                                    <h4 className="font-semibold text-gray-800 mb-2 border-b pb-1">Capsule Content:</h4>
+                                    <p className="text-gray-700 text-base whitespace-pre-wrap leading-relaxed">
+                                        {selectedCapsule.content || "⚠️ ไม่มีเนื้อหาที่ระบุไว้สำหรับแคปซูลนี้"}
+                                    </p>
+                                </div>
+                            )}
 
                         </motion.div>
                     </motion.div>

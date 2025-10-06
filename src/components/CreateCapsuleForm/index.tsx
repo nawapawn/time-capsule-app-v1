@@ -5,12 +5,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import toast, { Toaster } from "react-hot-toast";
 import { Loader2, Send, Image as ImgIcon, Trash2 } from "lucide-react";
-import CapsuleToolbar from "./CapsuleToolbar";
-import { CapsuleType, moodOptions } from "@/utils/capsuleUtils";
+import CapsuleToolbar from "./CapsuleToolbar"; // Assume this component exists
+import { CapsuleType, moodOptions } from "@/utils/capsuleUtils"; // Assume this utility file exists
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 
+// --- Zod Schema for Validation ---
 const capsuleSchema = z.object({
   title: z.string().nonempty("Please enter the capsule title."),
   content: z.string().nonempty("Please write a message to your future self."),
@@ -24,8 +25,10 @@ const capsuleSchema = z.object({
 
 type CapsuleFormValues = z.infer<typeof capsuleSchema>;
 
+// --- Component Props Type ---
 interface CreateCapsuleFormProps {
-  onCreate?: (capsule: CapsuleType) => void;
+  // ฟังก์ชันนี้จะถูกเรียกเมื่อสร้างแคปซูลสำเร็จ และส่งข้อมูลแคปซูลใหม่กลับไป
+  onCreate?: (capsule: CapsuleType) => void; 
   onClose?: () => void;
 }
 
@@ -38,6 +41,7 @@ export default function CreateCapsuleForm({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // --- React Hook Form Setup ---
   const {
     register,
     handleSubmit,
@@ -47,6 +51,7 @@ export default function CreateCapsuleForm({
     resolver: zodResolver(capsuleSchema),
   });
 
+  // --- Image Upload (Dropzone) ---
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) setImageFile(acceptedFiles[0]);
   }, []);
@@ -57,38 +62,50 @@ export default function CreateCapsuleForm({
     multiple: false,
   });
 
+  // --- Form Submission Logic ---
   const onSubmit = (data: CapsuleFormValues) => {
     setIsLoading(true);
+    
+    // จำลองการเรียก API ด้วย setTimeout
     setTimeout(() => {
       setIsLoading(false);
+      
       const moodObject =
         moodOptions.find((m) => m.name === mood) || moodOptions[0];
+      
       const imageSrc = imageFile
         ? URL.createObjectURL(imageFile)
         : `https://picsum.photos/seed/${Date.now()}/600/400`;
 
+      // สร้างวัตถุแคปซูลใหม่
       const newCapsule: CapsuleType = {
         id: Date.now(),
         title: data.title,
+        content: data.content, // เพิ่ม content เข้าไปใน CapsuleType
+        unlockAt: new Date(data.openDate).toISOString(), // (สำหรับ ProfilePage.tsx เดิม)
+        targetDate: new Date(data.openDate), // สำหรับ Timeline
+        visibility: isPrivate ? 'Private' : 'Public', // เพิ่ม visibility
         creator: "You",
         creatorAvatar: "https://i.pravatar.cc/150?img=68",
         imageSrc,
         mood: moodObject,
-        targetDate: new Date(data.openDate),
         views: 0,
         bookmarked: false,
       };
 
-      onCreate?.(newCapsule);
+      // 💥 เรียกฟังก์ชัน onCreate เพื่ออัปเดต State ในหน้า ProfilePage
+      onCreate?.(newCapsule); 
+      
       toast.success("Your Time Capsule has been created!");
       reset();
       setMood(moodOptions[0].name);
       setIsPrivate(true);
       setImageFile(null);
-      onClose?.();
+      onClose?.(); // ปิด Modal
     }, 1000);
   };
 
+  // --- JSX Rendering ---
   return (
     <AnimatePresence>
       <motion.div
@@ -137,13 +154,13 @@ export default function CreateCapsuleForm({
               <p className="text-xs text-red-500">{errors.content.message}</p>
             )}
 
-            {/* Toolbar */}
+            {/* Toolbar (Privacy Toggle) */}
             <CapsuleToolbar
               isPrivate={isPrivate}
               onPrivacyToggle={setIsPrivate}
             />
 
-            {/* Mood */}
+            {/* Mood Selection */}
             <div className="flex flex-wrap gap-2 mt-1 overflow-x-auto">
               {moodOptions.map((m) => (
                 <button
@@ -188,7 +205,10 @@ export default function CreateCapsuleForm({
               {imageFile && (
                 <button
                   type="button"
-                  onClick={() => setImageFile(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setImageFile(null);
+                  }}
                   className="ml-auto p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-800 transition"
                   aria-label="Remove image"
                 >
@@ -207,7 +227,7 @@ export default function CreateCapsuleForm({
               </div>
             )}
 
-            {/* Submit */}
+            {/* Submit Button */}
             <button
               type="submit"
               className="w-full flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-medium hover:opacity-90 transition"
