@@ -13,9 +13,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 
-
 // ✅ CapsuleType structure
-
 
 // ✅ Schema validation
 const capsuleSchema = z.object({
@@ -85,6 +83,8 @@ export default function CreateCapsuleForm({
         imageSrc,
         mood: moodObject,
         targetDate: new Date(data.openDate),
+        unlockAt: new Date(data.openDate), // ✅ เพิ่ม
+        visibility: isPrivate ? "private" : "public", // ✅ เพิ่ม
         views: 0,
         bookmarked: false,
         isPrivate,

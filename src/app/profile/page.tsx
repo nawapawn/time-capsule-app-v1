@@ -8,37 +8,35 @@ import Avatar from "@/components/Avatar";
 import CapsuleCard from "@/components/CapsuleCard";
 import { mockCapsules } from "@/lib/mockData";
 import CreateCapsuleForm from "@/components/CreateCapsuleForm";
-import { useProfileStore } from "@/store/profileStore";
-import { Capsule } from "@/types";
+import { CapsuleType } from "@/utils/capsuleUtils";
 
 const NEARBY_THRESHOLD = 0.015;
 const Y_OFFSET_DISTANCE = 30;
 
 export default function ProfilePage() {
-  const { profile } = useProfileStore();
-  const [capsules, setCapsules] = useState<Capsule[]>(mockCapsules as Capsule[]);
-  const [selectedCapsule, setSelectedCapsule] = useState<Capsule | null>(null);
+  const [capsules, setCapsules] = useState<CapsuleType[]>(mockCapsules as CapsuleType[]);
+  const [selectedCapsule, setSelectedCapsule] = useState<CapsuleType | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const toggleCreateModal = () => setIsCreateModalOpen(prev => !prev);
 
-  const addNewCapsule = useCallback((newCapsule: Capsule) => {
+  const addNewCapsule = useCallback((newCapsule: CapsuleType) => {
     setCapsules(prev => [newCapsule, ...prev]);
   }, []);
 
   const timelineYears = useMemo(() => {
     if (!capsules.length) return [];
     const years = capsules.reduce((acc, capsule) => {
-      const year = new Date(capsule.unlockAt).getFullYear();
+      const year = new Date(capsule.unlockAt || Date.now()).getFullYear();
       if (!acc[year]) acc[year] = { capsules: [], minDate: Infinity, maxDate: -Infinity };
-      const ts = new Date(capsule.unlockAt).getTime();
+      const ts = new Date(capsule.unlockAt || Date.now()).getTime();
       acc[year].capsules.push(capsule);
       acc[year].minDate = Math.min(acc[year].minDate, ts);
       acc[year].maxDate = Math.max(acc[year].maxDate, ts);
       return acc;
-    }, {} as Record<number, { capsules: Capsule[]; minDate: number; maxDate: number }>);
+    }, {} as Record<number, { capsules: CapsuleType[]; minDate: number; maxDate: number }>);
 
-    const allDates = capsules.map(c => new Date(c.unlockAt).getTime());
+    const allDates = capsules.map(c => new Date(c.unlockAt || Date.now()).getTime());
     const globalMinDate = Math.min(...allDates);
     const globalMaxDate = Math.max(...allDates);
     const totalRange = globalMaxDate - globalMinDate;
@@ -59,7 +57,7 @@ export default function ProfilePage() {
   const positionedCapsules = useMemo(() => {
     if (!capsules.length) return [];
     const sorted = capsules
-      .map(c => ({ ...c, timestamp: new Date(c.unlockAt).getTime() }))
+      .map(c => ({ ...c, timestamp: new Date(c.unlockAt || Date.now()).getTime() }))
       .sort((a, b) => a.timestamp - b.timestamp);
 
     const allDates = sorted.map(c => c.timestamp);
@@ -110,12 +108,12 @@ export default function ProfilePage() {
             transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
             className="w-32 h-32 rounded-full bg-gray-50 flex items-center justify-center border border-gray-200 shadow-md"
           >
-            <Avatar name={profile.name} size={96} avatarUrl={profile.avatarUrl} />
+            <Avatar name="User" size={96} avatarUrl="" />
           </motion.div>
 
-          <h1 className="text-4xl font-extrabold mt-6 text-gray-900">{profile.name}</h1>
-          <p className="text-base text-gray-600">{profile.email}</p>
-          <p className="text-md text-gray-500 italic mt-2 text-center max-w-[28rem] font-light">“{profile.tagline}”</p>
+          <h1 className="text-4xl font-extrabold mt-6 text-gray-900">User Name</h1>
+          <p className="text-base text-gray-600">user@example.com</p>
+          <p className="text-md text-gray-500 italic mt-2 text-center max-w-[28rem] font-light">“Tagline here”</p>
 
           <div className="mt-8 flex gap-4">
             <Link href="/profile/edit" passHref>
@@ -158,7 +156,7 @@ export default function ProfilePage() {
 
             <div className="absolute inset-0 flex items-center px-4" style={{ top: '35%' }}>
               {positionedCapsules.map((capsule, index) => {
-                const date = new Date(capsule.unlockAt);
+                const date = new Date(capsule.unlockAt || Date.now());
                 const label = date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
                 return (
                   <motion.div
@@ -223,23 +221,28 @@ export default function ProfilePage() {
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <button className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 transition" onClick={() => setSelectedCapsule(null)}>
+              <button
+                aria-label="Close modal"
+                title="Close modal"
+                className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 transition"
+                onClick={() => setSelectedCapsule(null)}
+              >
                 <X size={24} />
               </button>
 
               <h3 className="text-2xl font-bold mb-2 text-violet-600">{selectedCapsule.title}</h3>
               <div className="flex items-center gap-4 text-sm text-gray-500 mb-4 border-b border-gray-200 pb-2">
-                <p>{new Date(selectedCapsule.unlockAt).getTime() > Date.now() ? "LOCKED until:" : "UNLOCKED on:"} {new Date(selectedCapsule.unlockAt).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}</p>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${selectedCapsule.visibility === 'Public' ? 'bg-violet-100 text-violet-700' : 'bg-pink-100 text-pink-700'}`}>
-                  {selectedCapsule.visibility.toUpperCase()}
+                <p>{new Date(selectedCapsule.unlockAt || Date.now()).getTime() > Date.now() ? "LOCKED until:" : "UNLOCKED on:"} {new Date(selectedCapsule.unlockAt || Date.now()).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}</p>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${selectedCapsule.visibility === 'public' ? 'bg-violet-100 text-violet-700' : 'bg-pink-100 text-pink-700'}`}>
+                  {(selectedCapsule.visibility || "private").toUpperCase()}
                 </span>
               </div>
 
-              {new Date(selectedCapsule.unlockAt).getTime() > Date.now() ? (
+              {new Date(selectedCapsule.unlockAt || Date.now()).getTime() > Date.now() ? (
                 <div className="bg-red-50 p-4 rounded-xl flex flex-col items-center justify-center text-red-600 font-semibold border border-red-200 mt-4">
                   <Lock size={24} className="mb-2" />
                   <p className="text-lg">Contents are securely time-locked.</p>
-                  <p className="text-sm font-normal text-gray-600 mt-1">Please check back on {new Date(selectedCapsule.unlockAt).toLocaleDateString()}</p>
+                  <p className="text-sm font-normal text-gray-600 mt-1">Please check back on {new Date(selectedCapsule.unlockAt || Date.now()).toLocaleDateString()}</p>
                 </div>
               ) : (
                 <div className="mt-4 max-h-80 overflow-y-auto">
