@@ -38,11 +38,11 @@ const ALL_CAPSULES: CapsuleType[] = posts
       creator: `${user.name.first} ${user.name.last}`,
       creatorAvatar: user.picture.large,
       imageSrc: `https://picsum.photos/seed/${i}/600/400`,
-      mood, // { name, emoji, color }
+      mood,
       targetDate: new Date(Date.now() + (i + 1) * 86400000),
       views: Math.floor(Math.random() * 9999) + 100,
       bookmarked: false,
-      isPrivate: i % 3 === 0, // ให้บางแคปซูลเป็น private บ้าง
+      isPrivate: i % 3 === 0,
     };
   })
   .reverse();
@@ -67,15 +67,13 @@ const HomePage: React.FC = () => {
   const [popularCapsules, setPopularCapsules] = useState<CapsuleType[]>([]);
   const [shareCapsule, setShareCapsule] = useState<CapsuleType | null>(null);
   const [shareAnchor, setShareAnchor] =
-    useState<RefObject<HTMLButtonElement> | null>(null);
+    useState<RefObject<HTMLButtonElement | null> | null>(null); // แก้ type ตรงนี้
   const [showCreateCapsuleForm, setShowCreateCapsuleForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Infinite scroll state
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  // Ref for observer
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // === Load more function ===
@@ -137,16 +135,17 @@ const HomePage: React.FC = () => {
     };
   }, [hasMore, loadMore]);
 
-  // === Share handler ===
+  // === Share handler (null-safe) ===
   const handleShare = (
     capsule: CapsuleType,
-    ref: RefObject<HTMLButtonElement>
+    ref: RefObject<HTMLButtonElement | null>
   ) => {
+    if (!ref.current) return;
     setShareCapsule(capsule);
     setShareAnchor(ref);
   };
 
-  // ✅ Capsule create handler (รับจาก CreateCapsuleForm)
+  // === Capsule create handler ===
   const handleCreateCapsule = (newCapsule: CapsuleType) => {
     const moodWithColor = {
       ...newCapsule.mood,
@@ -167,10 +166,8 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-[80vh] bg-white dark:bg-neutral-950 flex flex-col justify-center pt-16 px-4 pb-8 relative">
-      {/* === Navbar === */}
       <Navbar onOpenCreateCapsule={() => setShowCreateCapsuleForm(true)} />
 
-      {/* === Create Capsule Modal === */}
       {showCreateCapsuleForm && (
         <CreateCapsuleForm
           onCreate={handleCreateCapsule}
@@ -178,7 +175,6 @@ const HomePage: React.FC = () => {
         />
       )}
 
-      {/* === Popular Section === */}
       <div className="w-full flex justify-center mt-4">
         <div className="w-full max-w-5xl">
           <PopularMemories
@@ -187,15 +183,13 @@ const HomePage: React.FC = () => {
               bookmarked: isBookmarked(c.id),
             }))}
             onBookmark={toggleBookmark}
-            onShare={(c) => setShareCapsule(c)}
+            onShare={handleShare}
           />
         </div>
       </div>
 
-      {/* === Feed Section === */}
       <section className="w-full mt-4 flex justify-center">
         <div className="grid grid-cols-1 gap-6 w-full max-w-4xl">
-          {/* Skeleton Loading */}
           {loading &&
             feedData.length === 0 &&
             Array.from({ length: 6 }).map((_, i) => (
@@ -205,7 +199,6 @@ const HomePage: React.FC = () => {
               />
             ))}
 
-          {/* Feed Cards */}
           {feedData.map((c) => {
             const shareRef = React.createRef<HTMLButtonElement>();
             return (
@@ -220,20 +213,16 @@ const HomePage: React.FC = () => {
             );
           })}
 
-          {/* Infinite Scroll Loader */}
           {hasMore && (
             <div ref={loadMoreRef} className="text-center py-8">
               {loading ? (
-                <div className="animate-pulse text-gray-500">
-                  กำลังโหลด...
-                </div>
+                <div className="animate-pulse text-gray-500">กำลังโหลด...</div>
               ) : (
                 <div className="text-gray-400">เลื่อนลงเพื่อโหลดเพิ่ม</div>
               )}
             </div>
           )}
 
-          {/* End Message */}
           {!hasMore && (
             <div className="text-center py-8 text-gray-500">
               คุณได้ดูแคปซูลทั้งหมดแล้ว 🎉
@@ -242,7 +231,6 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* === Share Popup === */}
       {shareCapsule && shareAnchor && (
         <ShareButton capsuleId={shareCapsule.id} shareRef={shareAnchor} />
       )}
