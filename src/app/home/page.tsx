@@ -20,6 +20,7 @@ import { useCapsule } from "@/context/CapsuleContext";
 const ITEMS_PER_PAGE = 10;
 const TOTAL_POSTS = posts.length;
 
+// สร้าง ALL_CAPSULES ตามเดิม
 const ALL_CAPSULES: CapsuleType[] = posts
   .map((title, i) => {
     const user = {
@@ -27,8 +28,6 @@ const ALL_CAPSULES: CapsuleType[] = posts
       picture: { large: `https://i.pravatar.cc/150?img=${i % 70}` },
     };
     const mood = moodOptions[i % moodOptions.length];
-
-    // ✅ map visibility ให้ตรง literal type
     const visibility: "private" | "public" = i % 3 === 0 ? "private" : "public";
 
     return {
@@ -44,7 +43,7 @@ const ALL_CAPSULES: CapsuleType[] = posts
       unlockAt: new Date(Date.now() + (i + 1) * 86400000),
       views: Math.floor(Math.random() * 9999) + 100,
       bookmarked: false,
-      visibility, // ✅ ตอนนี้ตรง type
+      visibility,
       isPrivate: i % 3 === 0,
       crossed: false,
       postText: "",
@@ -71,7 +70,7 @@ const HomePage: React.FC = () => {
   const [popularCapsules, setPopularCapsules] = useState<CapsuleType[]>([]);
   const [shareCapsule, setShareCapsule] = useState<CapsuleType | null>(null);
   const [shareAnchor, setShareAnchor] =
-    useState<RefObject<HTMLButtonElement | null> | null>(null); // ✅ แก้ type ให้รองรับ null
+    useState<RefObject<HTMLButtonElement | null> | null>(null);
   const [showCreateCapsuleForm, setShowCreateCapsuleForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -131,7 +130,6 @@ const HomePage: React.FC = () => {
     };
   }, [hasMore, loadMore]);
 
-  // ✅ แก้ handleShareFeed type ให้ตรงกับ state
   const handleShareFeed = (
     capsule: CapsuleType,
     ref: RefObject<HTMLButtonElement | null>
@@ -140,7 +138,6 @@ const HomePage: React.FC = () => {
     setShareAnchor(ref);
   };
 
-  // ✅ แก้ handleSharePopular type ให้ตรงกับ state
   const handleSharePopular = (capsule: CapsuleType) => {
     const dummyRef = React.createRef<HTMLButtonElement | null>();
     setShareCapsule(capsule);
@@ -219,7 +216,7 @@ const HomePage: React.FC = () => {
 
           {!hasMore && (
             <div className="text-center py-8 text-gray-500">
-              คุณได้ดูแคปซูลทั้งหมดแล้ว 🎉
+              You have seen all the capsules. 🎉
             </div>
           )}
         </div>
@@ -228,7 +225,7 @@ const HomePage: React.FC = () => {
       {shareCapsule && shareAnchor && (
         <ShareButton
           capsuleId={Number(shareCapsule.id)}
-          shareRef={shareAnchor}
+          shareRef={shareAnchor as React.RefObject<HTMLButtonElement>} // ✨ cast ให้ตรง type
         />
       )}
     </div>

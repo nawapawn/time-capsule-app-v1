@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, CalendarDays, Rocket, X, Lock } from "lucide-react";
 import Link from "next/link";
@@ -11,33 +11,20 @@ import CreateCapsuleForm from "@/components/CreateCapsuleForm";
 import { CapsuleType } from "@/utils/capsuleUtils";
 import { useProfileStore } from "@/store/profileStore";
 
-
 const NEARBY_THRESHOLD = 0.015;
 const Y_OFFSET_DISTANCE = 30;
 
 export default function ProfilePage() {
-const profile = useProfileStore((state) => state.profile);
+  const profile = useProfileStore((state) => state.profile);
 
-  const [capsules, setCapsules] = useState<CapsuleType[]>(
-    () =>
-      mockCapsules.map((c) => ({
-        ...c,
-        id: String(c.id),
-        targetDate: new Date(c.targetDate),
-        unlockAt: c.unlockAt ? new Date(c.unlockAt) : undefined,
-        visibility: c.visibility === "public" ? "Public" : "private",
-        mood: c.mood,
-        creator: c.creator,
-        creatorAvatar: c.creatorAvatar,
-        imageSrc: c.imageSrc,
-        content: c.content,
-        description: c.description,
-        views: c.views ?? 0,
-        bookmarked: c.bookmarked ?? false,
-        isPrivate: c.isPrivate,
-        crossed: c.crossed,
-        postText: c.postText,
-      })) as CapsuleType[]
+  const [capsules, setCapsules] = useState<CapsuleType[]>(() =>
+    mockCapsules.map((c) => ({
+      ...c,
+      id: String(c.id),
+      targetDate: new Date(c.targetDate),
+      unlockAt: c.unlockAt ? new Date(c.unlockAt) : undefined,
+      visibility: c.visibility === "public" ? "public" : "private",
+    }))
   );
 
   const [selectedCapsule, setSelectedCapsule] = useState<CapsuleType | null>(
@@ -47,7 +34,16 @@ const profile = useProfileStore((state) => state.profile);
   const toggleCreateModal = () => setIsCreateModalOpen((prev) => !prev);
 
   const addNewCapsule = useCallback((newCapsule: CapsuleType) => {
-    setCapsules((prev) => [newCapsule, ...prev]);
+    setCapsules((prev) => [
+      {
+        ...newCapsule,
+        id: String(newCapsule.id),
+        targetDate: new Date(newCapsule.targetDate),
+        unlockAt: newCapsule.unlockAt ? new Date(newCapsule.unlockAt) : undefined,
+        visibility: newCapsule.visibility === "public" ? "public" : "private",
+      },
+      ...prev,
+    ]);
   }, []);
 
   const timelineYears = useMemo(() => {
@@ -192,8 +188,7 @@ const profile = useProfileStore((state) => state.profile);
         {/* Timeline */}
         <section className="mt-12">
           <h2 className="text-xl font-semibold mb-8 flex items-center gap-3 border-b border-gray-200 pb-2">
-            <CalendarDays size={20} className="text-violet-500" /> Time-Warp
-            Timeline
+            <CalendarDays size={20} className="text-violet-500" /> Time-Warp Timeline
           </h2>
 
           <div className="relative w-full h-40 mt-8">
@@ -211,10 +206,7 @@ const profile = useProfileStore((state) => state.profile);
 
             <div className="absolute top-1/2 left-0 w-full h-[2px] -translate-y-1/2 bg-gray-300"></div>
 
-            <div
-              className="absolute inset-0 flex items-center px-4"
-              style={{ top: "35%" }}
-            >
+            <div className="absolute inset-0 flex items-center px-4 top-[35%]">
               {positionedCapsules.map((capsule, index) => {
                 const date = new Date(capsule.unlockAt || Date.now());
                 const label = date.toLocaleDateString("en-US", {
@@ -247,10 +239,6 @@ const profile = useProfileStore((state) => state.profile);
                         boxShadow: "0 0 6px rgba(139,92,246,0.3)",
                       }}
                     ></div>
-                    <div
-                      className="absolute w-5 h-5 rounded-full top-0 bg-transparent transition-all duration-300 group-hover:scale-[1.6] group-hover:shadow-[0_0_15px_#a78bfa,0_0_30px_rgba(139,92,246,0.2)] z-0"
-                      style={{ transform: "translateY(-50%)" }}
-                    ></div>
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -274,7 +262,7 @@ const profile = useProfileStore((state) => state.profile);
             <Clock size={20} className="text-violet-500" /> My Capsules
           </h2>
           <div className="space-y-4">
-            {capsules.map((capsule) => (
+            {capsules.map((capsule, index) => (
               <motion.div
                 key={capsule.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -283,7 +271,14 @@ const profile = useProfileStore((state) => state.profile);
                 onClick={() => setSelectedCapsule(capsule)}
                 className="cursor-pointer"
               >
-                <CapsuleCard capsule={capsule} />
+                <CapsuleCard
+                  capsule={{
+                    ...capsule,
+                    creator: profile.name,
+                    creatorAvatar: profile.avatarUrl,
+                  }}
+                  index={index}
+                />
               </motion.div>
             ))}
           </div>
@@ -320,6 +315,7 @@ const profile = useProfileStore((state) => state.profile);
               <h3 className="text-2xl font-bold mb-2 text-violet-600">
                 {selectedCapsule.title}
               </h3>
+
               <div className="flex items-center gap-4 text-sm text-gray-500 mb-4 border-b border-gray-200 pb-2">
                 <p>
                   {new Date(selectedCapsule.unlockAt || Date.now()).getTime() >
@@ -364,7 +360,7 @@ const profile = useProfileStore((state) => state.profile);
                   </h4>
                   <p className="text-gray-700 text-base whitespace-pre-wrap leading-relaxed">
                     {selectedCapsule.content ||
-                      "⚠️ No content specified for this capsule." /* 💡 แก้ไขข้อความไทยเป็นอังกฤษ */}
+                      "⚠️ There is no content specified for this capsule."}
                   </p>
                 </div>
               )}

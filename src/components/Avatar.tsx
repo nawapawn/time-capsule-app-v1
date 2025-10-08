@@ -1,6 +1,5 @@
 // src/components/Avatar.tsx
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 type Props = { name?: string; size?: number; avatarUrl?: string };
 
@@ -24,26 +23,23 @@ export default function Avatar({ name, size = 56, avatarUrl }: Props) {
 
   const textSizeClass = getTextSizeClass(size);
 
-  if (avatarUrl) {
-    return (
-      <img
-        src={avatarUrl}
-        alt={`${safeName} Avatar`}
-        width={size}
-        height={size}
-        className="rounded-full object-cover"
-      />
-    );
-  }
+  const [imgError, setImgError] = useState(false);
 
-  // ********** ⚪️ Minimal White Theme: Solid Dark Gray/Black Initials 🖤 **********
+  // 🔄 ถ้า avatarUrl เปลี่ยน ให้ reset imgError
+  useEffect(() => {
+    setImgError(false);
+  }, [avatarUrl]);
+
+  const imgSrc = avatarUrl && !imgError ? avatarUrl : "/export-removebg-preview.png";
+
   return (
-    <div
-      style={{ width: size, height: size }}
-      // 🖤 เปลี่ยนจาก Gradient สีเน้น เป็นสีเทาเข้ม (Solid Gray-900)
-      className={`rounded-full bg-gray-900 flex items-center justify-center text-white font-extrabold shadow-md shadow-gray-500/50 ${textSizeClass}`}
-    >
-      {initials}
-    </div>
+    <img
+      src={imgSrc}
+      alt={`${safeName} Avatar`}
+      width={size}
+      height={size}
+      className="rounded-full object-cover shadow-md"
+      onError={() => setImgError(true)}
+    />
   );
 }
