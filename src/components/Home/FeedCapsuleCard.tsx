@@ -1,3 +1,4 @@
+// FeedCapsuleCard component สำหรับแสดง capsule ใน feed
 "use client";
 import React, { useState, useEffect, RefObject, Suspense } from "react";
 import { Eye, Bookmark, Share2, MessageCircle } from "lucide-react";
@@ -7,7 +8,9 @@ import CommentList, { CommentType as CommentItemType } from "./CommentList";
 import ProfileAvatar from "../ProfileAvatar";
 import Image from "next/image";
 
-// Lazy load FeedCapsuleCard images with Suspense
+// -----------------------------------
+// Props ของ FeedCapsuleCard
+// -----------------------------------
 interface Props {
   capsule: CapsuleType;
   onBookmark: (capsule: CapsuleType) => void;
@@ -15,7 +18,7 @@ interface Props {
     capsule: CapsuleType,
     ref: RefObject<HTMLButtonElement | null>
   ) => void;
-  rank?: number;
+  rank?: number; // สำหรับ ranking badge
   size?: "small" | "large";
   shareRef?: RefObject<HTMLButtonElement | null>;
 }
@@ -28,11 +31,15 @@ const FeedCapsuleCard: React.FC<Props> = ({
   size = "large",
   shareRef,
 }) => {
+  // Countdown
   const [countdown, setCountdown] = useState("");
+  // Comments state
   const [comments, setComments] = useState<CommentItemType[]>([]);
   const [showComments, setShowComments] = useState(false);
 
-  // Countdown
+  // -----------------------------------
+  // Countdown logic
+  // -----------------------------------
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
@@ -47,10 +54,12 @@ const FeedCapsuleCard: React.FC<Props> = ({
         setCountdown(`${d}d ${h}h ${m}m ${s}s`);
       }
     }, 1000);
-
     return () => clearInterval(interval);
   }, [capsule.targetDate]);
 
+  // -----------------------------------
+  // Comment logic
+  // -----------------------------------
   const handleAddComment = (text: string) => {
     const avatar = `https://i.pravatar.cc/150?img=${(Date.now() % 70) + 1}`;
     setComments((prev) => [
@@ -76,10 +85,16 @@ const FeedCapsuleCard: React.FC<Props> = ({
     );
   };
 
+  // -----------------------------------
+  // Bookmark & Share
+  // -----------------------------------
   const handleBookmarkClick = () => onBookmark(capsule);
   const handleShareClick = () =>
     onShare && onShare(capsule, shareRef ?? React.createRef());
 
+  // -----------------------------------
+  // Size & styling
+  // -----------------------------------
   const isSmall = size === "small";
   const cardWidth = isSmall ? "min-w-full sm:min-w-[200px]" : "min-w-full";
   const titleSize = isSmall ? "text-base" : "text-lg";
@@ -93,6 +108,7 @@ const FeedCapsuleCard: React.FC<Props> = ({
     <div
       className={`bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col relative ${cardWidth} transition-all`}
     >
+      {/* Mood badge */}
       {capsule.mood && (
         <div className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full shadow-md z-10">
           <span className={`text-sm font-medium ${capsule.mood.color}`}>
@@ -101,12 +117,14 @@ const FeedCapsuleCard: React.FC<Props> = ({
         </div>
       )}
 
+      {/* Rank badge */}
       {rank !== undefined && (
         <div className="absolute top-2 left-2 bg-yellow-400 text-white font-bold rounded-full w-7 h-7 flex items-center justify-center shadow-md text-sm z-10">
           {rank}
         </div>
       )}
 
+      {/* Image */}
       <div className="relative w-full aspect-video bg-gray-100">
         {capsule.imageSrc && (
           <Suspense fallback={<div className="flex items-center justify-center w-full h-full text-gray-400">Loading...</div>}>
@@ -122,6 +140,7 @@ const FeedCapsuleCard: React.FC<Props> = ({
         )}
       </div>
 
+      {/* Capsule info */}
       <div className="p-3 flex flex-col gap-2">
         <h3 className={`${titleSize} font-bold text-gray-900 line-clamp-1`}>
           {capsule.title}
@@ -131,10 +150,12 @@ const FeedCapsuleCard: React.FC<Props> = ({
           <span className="text-xs text-gray-700">@{capsule.creator}</span>
         </div>
 
+        {/* Countdown */}
         <div className="border-t pt-2 border-gray-100 text-xs text-gray-500">
           <span className="font-semibold text-blue-600">{countdown}</span>
         </div>
 
+        {/* Stats & action buttons */}
         <div className="flex justify-between items-center mt-2">
           <span className="flex items-center gap-1 text-xs text-gray-500">
             <Eye className={`h-${iconSize} w-${iconSize}`} /> {formatViews(capsule.views)}
@@ -175,6 +196,7 @@ const FeedCapsuleCard: React.FC<Props> = ({
           </div>
         </div>
 
+        {/* Comments section */}
         {showComments && (
           <div className="mt-3 border-t border-gray-100 pt-2">
             <CommentBox onAddComment={handleAddComment} />

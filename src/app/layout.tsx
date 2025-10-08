@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/export-removebg-preview.png" type="image/png" />
         <link rel="shortcut icon" href="/export-removebg-preview.png" type="image/png" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>memory_capsule</title>
+        <title>memory capsule</title>
       </head>
       <body>
         <CapsuleProvider>

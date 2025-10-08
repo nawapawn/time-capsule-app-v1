@@ -1,22 +1,29 @@
+// Profile Page
 "use client";
 
-import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Clock, CalendarDays, Rocket, X, Lock } from "lucide-react";
+import React, { useState, useMemo, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion"; // สำหรับ animation
+import { Clock, CalendarDays, Rocket, X, Lock } from "lucide-react"; // icons
 import Link from "next/link";
-import Avatar from "@/components/Avatar";
-import CapsuleCard from "@/components/CapsuleCard";
-import { mockCapsules } from "@/lib/mockData";
-import CreateCapsuleForm from "@/components/CreateCapsuleForm";
-import { CapsuleType } from "@/utils/capsuleUtils";
-import { useProfileStore } from "@/store/profileStore";
+import Avatar from "@/components/Avatar"; // avatar component
+import CapsuleCard from "@/components/CapsuleCard"; // capsule card component
+import { mockCapsules } from "@/lib/mockData"; // data mock
+import CreateCapsuleForm from "@/components/CreateCapsuleForm"; // modal create capsule
+import { CapsuleType } from "@/utils/capsuleUtils"; // type ของ capsule
+import { useProfileStore } from "@/store/profileStore"; // store profile
 
-const NEARBY_THRESHOLD = 0.015;
-const Y_OFFSET_DISTANCE = 30;
+// ==============================
+// Constants
+// ==============================
+const NEARBY_THRESHOLD = 0.015; // ระยะห่างน้อยสุดสำหรับ timeline capsule
+const Y_OFFSET_DISTANCE = 30; // ระยะ offset ในแกน Y เพื่อไม่ให้ capsule ทับกัน
 
 export default function ProfilePage() {
-  const profile = useProfileStore((state) => state.profile);
+  const profile = useProfileStore((state) => state.profile); // ดึง profile จาก store
 
+  // ==============================
+  // State ของ capsules
+  // ==============================
   const [capsules, setCapsules] = useState<CapsuleType[]>(() =>
     mockCapsules.map((c) => ({
       ...c,
@@ -27,12 +34,13 @@ export default function ProfilePage() {
     }))
   );
 
-  const [selectedCapsule, setSelectedCapsule] = useState<CapsuleType | null>(
-    null
-  );
+  const [selectedCapsule, setSelectedCapsule] = useState<CapsuleType | null>(null); // capsule modal
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const toggleCreateModal = () => setIsCreateModalOpen((prev) => !prev);
 
+  // ==============================
+  // ฟังก์ชันเพิ่ม capsule ใหม่
+  // ==============================
   const addNewCapsule = useCallback((newCapsule: CapsuleType) => {
     setCapsules((prev) => [
       {
@@ -46,22 +54,28 @@ export default function ProfilePage() {
     ]);
   }, []);
 
+  // ==============================
+  // Timeline Years
+  // ==============================
   const timelineYears = useMemo(() => {
     if (!capsules.length) return [];
-    const years = capsules.reduce((acc, capsule) => {
-      const year = new Date(capsule.unlockAt || Date.now()).getFullYear();
-      if (!acc[year])
-        acc[year] = { capsules: [], minDate: Infinity, maxDate: -Infinity };
-      const ts = new Date(capsule.unlockAt || Date.now()).getTime();
-      acc[year].capsules.push(capsule);
-      acc[year].minDate = Math.min(acc[year].minDate, ts);
-      acc[year].maxDate = Math.max(acc[year].maxDate, ts);
-      return acc;
-    }, {} as Record<number, { capsules: CapsuleType[]; minDate: number; maxDate: number }>);
 
-    const allDates = capsules.map((c) =>
-      new Date(c.unlockAt || Date.now()).getTime()
+    const years = capsules.reduce(
+      (acc, capsule) => {
+        const year = new Date(capsule.unlockAt || Date.now()).getFullYear();
+        if (!acc[year])
+          acc[year] = { capsules: [], minDate: Infinity, maxDate: -Infinity };
+
+        const ts = new Date(capsule.unlockAt || Date.now()).getTime();
+        acc[year].capsules.push(capsule);
+        acc[year].minDate = Math.min(acc[year].minDate, ts);
+        acc[year].maxDate = Math.max(acc[year].maxDate, ts);
+        return acc;
+      },
+      {} as Record<number, { capsules: CapsuleType[]; minDate: number; maxDate: number }>
     );
+
+    const allDates = capsules.map((c) => new Date(c.unlockAt || Date.now()).getTime());
     const globalMinDate = Math.min(...allDates);
     const globalMaxDate = Math.max(...allDates);
     const totalRange = globalMaxDate - globalMinDate;
@@ -69,12 +83,14 @@ export default function ProfilePage() {
     return Object.entries(years)
       .map(([year, data]) => ({
         year,
-        position:
-          totalRange > 0 ? (data.minDate - globalMinDate) / totalRange : 0,
+        position: totalRange > 0 ? (data.minDate - globalMinDate) / totalRange : 0,
       }))
       .sort((a, b) => parseInt(a.year) - parseInt(b.year));
   }, [capsules]);
 
+  // ==============================
+  // ฟังก์ชันคำนวณตำแหน่ง CSS ของ timeline capsule
+  // ==============================
   const calculatePositionStyle = useCallback(
     (position: number) => ({
       left: `${(position * 100).toFixed(4)}%`,
@@ -83,8 +99,12 @@ export default function ProfilePage() {
     []
   );
 
+  // ==============================
+  // คำนวณตำแหน่ง capsule แต่ละอันบน timeline + offset Y
+  // ==============================
   const positionedCapsules = useMemo(() => {
     if (!capsules.length) return [];
+
     const sorted = capsules
       .map((c) => ({
         ...c,
@@ -110,6 +130,7 @@ export default function ProfilePage() {
       yOffset: 0,
     }));
 
+    // กำหนด yOffset เพื่อไม่ให้ capsule ซ้อนกัน
     for (let i = 1; i < positioned.length; i++) {
       const cur = positioned[i];
       const prev = positioned[i - 1];
@@ -129,8 +150,12 @@ export default function ProfilePage() {
     return positioned;
   }, [capsules]);
 
+  // ==============================
+  // JSX หน้า profile
+  // ==============================
   return (
     <main className="min-h-screen bg-white text-gray-900 relative overflow-hidden px-6 pt-24 pb-20">
+      {/* Modal Create Capsule */}
       <AnimatePresence>
         {isCreateModalOpen && (
           <CreateCapsuleForm
@@ -173,10 +198,7 @@ export default function ProfilePage() {
 
             <motion.button
               onClick={toggleCreateModal}
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0 0 10px rgba(0,0,0,0.4)",
-              }}
+              whileHover={{ scale: 1.05, boxShadow: "0 0 10px rgba(0,0,0,0.4)" }}
               whileTap={{ scale: 0.95 }}
               className="px-5 py-2.5 rounded-xl bg-gray-900 hover:bg-black text-sm font-semibold border border-gray-900 shadow-lg shadow-gray-400/50 transition text-white"
             >
@@ -192,6 +214,7 @@ export default function ProfilePage() {
           </h2>
 
           <div className="relative w-full h-40 mt-8">
+            {/* ปี timeline */}
             <div className="absolute inset-x-0 top-[-1.5rem] flex justify-between h-8">
               {timelineYears.map((item) => (
                 <div
@@ -204,40 +227,27 @@ export default function ProfilePage() {
               ))}
             </div>
 
+            {/* Timeline line */}
             <div className="absolute top-1/2 left-0 w-full h-[2px] -translate-y-1/2 bg-gray-300"></div>
 
+            {/* Capsules */}
             <div className="absolute inset-0 flex items-center px-4 top-[35%]">
               {positionedCapsules.map((capsule, index) => {
                 const date = new Date(capsule.unlockAt || Date.now());
-                const label = date.toLocaleDateString("en-US", {
-                  day: "numeric",
-                  month: "short",
-                });
+                const label = date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
                 return (
                   <motion.div
                     key={capsule.id}
                     initial={{ scale: 0, opacity: 0, y: -20 }}
-                    animate={{
-                      scale: 1,
-                      opacity: 1,
-                      y: capsule.yOffset + "px",
-                    }}
-                    transition={{
-                      duration: 0.6,
-                      type: "spring",
-                      delay: 0.2 + index * 0.1,
-                    }}
+                    animate={{ scale: 1, opacity: 1, y: capsule.yOffset + "px" }}
+                    transition={{ duration: 0.6, type: "spring", delay: 0.2 + index * 0.1 }}
                     className="flex flex-col items-center group cursor-pointer absolute z-20"
                     style={calculatePositionStyle(capsule.position)}
                     onClick={() => setSelectedCapsule(capsule)}
                   >
                     <div
                       className="absolute w-5 h-5 rounded-full top-0 border-3 z-10 bg-violet-600"
-                      style={{
-                        transform: "translateY(-50%)",
-                        border: "3px solid #fff",
-                        boxShadow: "0 0 6px rgba(139,92,246,0.3)",
-                      }}
+                      style={{ transform: "translateY(-50%)", border: "3px solid #fff", boxShadow: "0 0 6px rgba(139,92,246,0.3)" }}
                     ></div>
                     <motion.div
                       initial={{ opacity: 0 }}
@@ -303,6 +313,7 @@ export default function ProfilePage() {
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Close Button */}
               <button
                 aria-label="Close modal"
                 title="Close modal"
@@ -312,19 +323,15 @@ export default function ProfilePage() {
                 <X size={24} />
               </button>
 
-              <h3 className="text-2xl font-bold mb-2 text-violet-600">
-                {selectedCapsule.title}
-              </h3>
+              <h3 className="text-2xl font-bold mb-2 text-violet-600">{selectedCapsule.title}</h3>
 
+              {/* Capsule Info */}
               <div className="flex items-center gap-4 text-sm text-gray-500 mb-4 border-b border-gray-200 pb-2">
                 <p>
-                  {new Date(selectedCapsule.unlockAt || Date.now()).getTime() >
-                  Date.now()
+                  {new Date(selectedCapsule.unlockAt || Date.now()).getTime() > Date.now()
                     ? "LOCKED until:"
                     : "UNLOCKED on:"}{" "}
-                  {new Date(
-                    selectedCapsule.unlockAt || Date.now()
-                  ).toLocaleDateString("en-US", {
+                  {new Date(selectedCapsule.unlockAt || Date.now()).toLocaleDateString("en-US", {
                     day: "numeric",
                     month: "long",
                     year: "numeric",
@@ -341,26 +348,21 @@ export default function ProfilePage() {
                 </span>
               </div>
 
-              {new Date(selectedCapsule.unlockAt || Date.now()).getTime() >
-              Date.now() ? (
+              {/* Capsule Content */}
+              {new Date(selectedCapsule.unlockAt || Date.now()).getTime() > Date.now() ? (
                 <div className="bg-red-50 p-4 rounded-xl flex flex-col items-center justify-center text-red-600 font-semibold border border-red-200 mt-4">
                   <Lock size={24} className="mb-2" />
                   <p className="text-lg">Contents are securely time-locked.</p>
                   <p className="text-sm font-normal text-gray-600 mt-1">
                     Please check back on{" "}
-                    {new Date(
-                      selectedCapsule.unlockAt || Date.now()
-                    ).toLocaleDateString()}
+                    {new Date(selectedCapsule.unlockAt || Date.now()).toLocaleDateString()}
                   </p>
                 </div>
               ) : (
                 <div className="mt-4 max-h-80 overflow-y-auto">
-                  <h4 className="font-semibold text-gray-800 mb-2 border-b pb-1">
-                    Capsule Content:
-                  </h4>
+                  <h4 className="font-semibold text-gray-800 mb-2 border-b pb-1">Capsule Content:</h4>
                   <p className="text-gray-700 text-base whitespace-pre-wrap leading-relaxed">
-                    {selectedCapsule.content ||
-                      "⚠️ There is no content specified for this capsule."}
+                    {selectedCapsule.content || "⚠️ There is no content specified for this capsule."}
                   </p>
                 </div>
               )}

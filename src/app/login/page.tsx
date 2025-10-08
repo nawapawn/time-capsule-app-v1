@@ -1,42 +1,64 @@
 // src/app/login/page.tsx
-"use client";
+"use client"; // บอก Next.js ว่าเป็น Client Component ใช้งาน useState, event handler ได้
+
 import React from "react";
-import Image from "next/image";
+import Image from "next/image"; // ใช้ next/image สำหรับ optimized image
 
-const MOCK_USER_SESSION_KEY = "mockAppUserId";
+// ==========================
+// Mock Session & Helpers
+// ==========================
+const MOCK_USER_SESSION_KEY = "mockAppUserId"; // key สำหรับเก็บ mock user ใน localStorage
 const generateMockUserId = (type: "google" | "apple") =>
-  `${type}-${Math.random().toString(36).substring(2, 9)}-${Date.now()}`;
+  `${type}-${Math.random().toString(36).substring(2, 9)}-${Date.now()}`; 
+// สร้าง mock user id แบบสุ่ม
 
+// Logo URLs
 const GOOGLE_LOGO_URL = "https://img.icons8.com/color/512/google-logo.png";
 const APPLE_LOGO_URL = "https://img.icons8.com/ios11/200/FFFFFF/mac-os.png";
 
+// ==========================
+// LoginPage Component
+// ==========================
 export default function LoginPage() {
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(false); // state loader
+  const [error, setError] = React.useState<string | null>(null); // state สำหรับ error
 
+  // ==========================
+  // ฟังก์ชัน Mock Sign In
+  // ==========================
   const handleSignIn = (type: "google" | "apple") => {
     setLoading(true);
     setError(null);
     try {
+      // สร้าง user id ใหม่
       const newUserId = generateMockUserId(type);
+      // เก็บลง localStorage
       localStorage.setItem(MOCK_USER_SESSION_KEY, newUserId);
+      // redirect ไปหน้า /home
       window.location.href = "/home";
     } catch (e) {
       console.error("Sign In error:", e);
       setError("Sign In Failed: Could not save session data.");
     } finally {
-      setLoading(false);
+      setLoading(false); // ปิด loader
     }
   };
 
+  // ==========================
+  // ฟังก์ชันสร้าง class สำหรับปุ่ม
+  // ==========================
   const buttonClass = (bgColor: string, textColor: string, borderColor = "") =>
     `w-full py-3 px-4 font-semibold rounded-xl transition duration-300 transform hover:scale-[1.01]
      focus:outline-none focus:ring-4 ${bgColor} focus:ring-opacity-70 flex items-center justify-center space-x-3
      disabled:opacity-50 disabled:cursor-not-allowed text-base shadow-md hover:shadow-lg ${textColor} ${borderColor}`;
 
+  // Background gradient แบบ custom
   const customBgClasses =
     "bg-white bg-[radial-gradient(at_83%_91%,_#E0E0FF_0px,_transparent_50%),radial-gradient(at_31%_0%,_#FFF2F5_0px,_transparent_50%)]";
 
+  // ==========================
+  // Layout
+  // ==========================
   return (
     <div
       className={`min-h-screen flex flex-col md:grid md:grid-cols-2 font-sans ${customBgClasses}`}
@@ -46,14 +68,14 @@ export default function LoginPage() {
       {/* ============================= */}
       <div className="hidden md:flex flex-col justify-center p-8 md:p-16 lg:p-24 text-gray-900">
         <div className="max-w-xl text-center md:text-left">
-          {/* Animated & Lazy Loaded Image */}
+          {/* Animated & Lazy Loaded Logo */}
           <Image
             src="/export-removebg-preview.png"
             alt="Memory Capsule Logo"
             width={120}
             height={120}
             className="mx-auto md:mx-0 mb-6 animate-float"
-            loading="lazy" // Lazy loading
+            loading="lazy" // lazy load image
           />
           <h1 className="text-5xl font-extrabold mb-4 tracking-tight text-gray-900">
             Memory Capsule
@@ -97,6 +119,9 @@ export default function LoginPage() {
               Please sign in with a trusted account (Google or Apple)
             </p>
 
+            {/* ============================= */}
+            {/* Google Sign In Button         */}
+            {/* ============================= */}
             <button
               onClick={() => handleSignIn("google")}
               disabled={loading}
@@ -118,6 +143,7 @@ export default function LoginPage() {
               )}
             </button>
 
+            {/* Divider */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
@@ -129,6 +155,9 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* ============================= */}
+            {/* Apple Sign In Button          */}
+            {/* ============================= */}
             <button
               onClick={() => handleSignIn("apple")}
               disabled={loading}
@@ -150,6 +179,7 @@ export default function LoginPage() {
               )}
             </button>
 
+            {/* Error Message */}
             {error && (
               <div className="mt-6 p-3 bg-red-100 border border-red-400 rounded-xl">
                 <p className="text-red-700 text-sm font-medium">{error}</p>

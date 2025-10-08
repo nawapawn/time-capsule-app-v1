@@ -1,4 +1,6 @@
-// src/components/CreateCapsuleForm.tsx
+// create capsule form component
+
+// ใช้ client-side React
 "use client";
 
 import React, { useState, useCallback } from "react";
@@ -7,52 +9,62 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import toast, { Toaster } from "react-hot-toast";
 import { Loader2, Send, Image as ImgIcon, Trash2 } from "lucide-react";
-import CapsuleToolbar from "./CapsuleToolbar";
-import { CapsuleType, moodOptions } from "@/utils/capsuleUtils";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { useDropzone } from "react-dropzone";
+import CapsuleToolbar from "./CapsuleToolbar"; // toggle private/public
+import { CapsuleType, moodOptions } from "@/utils/capsuleUtils"; // type และ mood data
+import Image from "next/image"; // preview image
+import { motion, AnimatePresence } from "framer-motion"; // animation
+import { useDropzone } from "react-dropzone"; // drag & drop image
 
-// ✅ CapsuleType structure
-
-// ✅ Schema validation
+// -----------------------------------
+// Schema validation ด้วย Zod
+// -----------------------------------
 const capsuleSchema = z.object({
-  title: z.string().nonempty("Please enter the capsule title."),
-  content: z.string().nonempty("Please write a message to your future self."),
+  title: z.string().nonempty("Please enter the capsule title."), // title ห้ามว่าง
+  content: z.string().nonempty("Please write a message to your future self."), // content ห้ามว่าง
   openDate: z
     .string()
     .refine(
       (val) => typeof window === "undefined" || new Date(val) > new Date(),
-      "The date and time must be in the future."
+      "The date and time must be in the future." // ต้องเป็นอนาคต
     ),
 });
 
-type CapsuleFormValues = z.infer<typeof capsuleSchema>;
+type CapsuleFormValues = z.infer<typeof capsuleSchema>; // type จาก schema
 
+// -----------------------------------
+// Props ของ component
+// -----------------------------------
 interface CreateCapsuleFormProps {
-  onCreate?: (capsule: CapsuleType) => void;
-  onClose?: () => void;
+  onCreate?: (capsule: CapsuleType) => void; // callback เมื่อสร้าง capsule สำเร็จ
+  onClose?: () => void; // callback ปิด modal
 }
 
+// -----------------------------------
+// Main component
+// -----------------------------------
 export default function CreateCapsuleForm({
   onCreate,
   onClose,
 }: CreateCapsuleFormProps) {
-  const [isPrivate, setIsPrivate] = useState(true);
-  const [mood, setMood] = useState<string>(moodOptions[0].name);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  // states
+  const [isPrivate, setIsPrivate] = useState(true); // private/public
+  const [mood, setMood] = useState<string>(moodOptions[0].name); // mood
+  const [imageFile, setImageFile] = useState<File | null>(null); // image preview
+  const [isLoading, setIsLoading] = useState(false); // loading submit
 
+  // react-hook-form
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm<CapsuleFormValues>({
-    resolver: zodResolver(capsuleSchema),
+    resolver: zodResolver(capsuleSchema), // validate ด้วย zod
   });
 
-  // ✅ Image dropzone
+  // -----------------------------------
+  // Image Dropzone
+  // -----------------------------------
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) setImageFile(acceptedFiles[0]);
   }, []);
@@ -60,20 +72,26 @@ export default function CreateCapsuleForm({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { "image/*": [] },
-    multiple: false,
+    multiple: false, // เอาได้แค่ 1 file
   });
 
-  // ✅ Submit
+  // -----------------------------------
+  // Submit form
+  // -----------------------------------
   const onSubmit = (data: CapsuleFormValues) => {
     setIsLoading(true);
 
     setTimeout(() => {
+      // หา mood object
       const moodObject =
         moodOptions.find((m) => m.name === mood) || moodOptions[0];
+
+      // สร้าง image preview ถ้าไม่เลือก ใช้ random picsum
       const imageSrc = imageFile
         ? URL.createObjectURL(imageFile)
         : `https://picsum.photos/seed/${Date.now()}/600/400`;
 
+      // สร้าง capsule object
       const newCapsule: CapsuleType = {
         id: Date.now().toString(),
         title: data.title,
@@ -83,30 +101,35 @@ export default function CreateCapsuleForm({
         imageSrc,
         mood: moodObject,
         targetDate: new Date(data.openDate),
-        unlockAt: new Date(data.openDate), // ✅ เพิ่ม
-        visibility: isPrivate ? "private" : "public", // ✅ เพิ่ม
+        unlockAt: new Date(data.openDate), // กำหนดเวลาเปิด
+        visibility: isPrivate ? "private" : "public",
         views: 0,
         bookmarked: false,
         isPrivate,
       };
 
-      onCreate?.(newCapsule);
-      toast.success("Your Time Capsule has been created!");
+      onCreate?.(newCapsule); // ส่งกลับไป parent
+      toast.success("Your Time Capsule has been created!"); // toast success
 
+      // reset form
       reset();
       setMood(moodOptions[0].name);
       setIsPrivate(true);
       setImageFile(null);
       setIsLoading(false);
-      onClose?.();
+      onClose?.(); // ปิด modal
     }, 1000);
   };
 
+  // -----------------------------------
+  // JSX
+  // -----------------------------------
   return (
     <AnimatePresence>
+      {/* backdrop */}
       <motion.div
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"
-        onClick={onClose}
+        onClick={onClose} // คลิกข้างนอกปิด
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -114,7 +137,7 @@ export default function CreateCapsuleForm({
         <Toaster position="top-center" />
         <motion.div
           className="w-full sm:max-w-lg bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 sm:p-8 flex flex-col gap-5 shadow-lg"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()} // หยุด click bubble
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1, transition: { duration: 0.25 } }}
           exit={{ scale: 0.9, opacity: 0, transition: { duration: 0.2 } }}
@@ -128,7 +151,7 @@ export default function CreateCapsuleForm({
             className="flex flex-col gap-4"
             noValidate
           >
-            {/* Title */}
+            {/* Title input */}
             <input
               {...register("title")}
               placeholder="Title"
@@ -138,7 +161,7 @@ export default function CreateCapsuleForm({
               <p className="text-xs text-red-500">{errors.title.message}</p>
             )}
 
-            {/* Content */}
+            {/* Content input */}
             <textarea
               {...register("content")}
               rows={4}
@@ -150,7 +173,7 @@ export default function CreateCapsuleForm({
               <p className="text-xs text-red-500">{errors.content.message}</p>
             )}
 
-            {/* Toolbar */}
+            {/* Privacy Toolbar */}
             <CapsuleToolbar
               isPrivate={isPrivate}
               onPrivacyToggle={setIsPrivate}
@@ -174,7 +197,7 @@ export default function CreateCapsuleForm({
               ))}
             </div>
 
-            {/* Open Date */}
+            {/* Open date */}
             <input
               {...register("openDate")}
               type="datetime-local"
@@ -210,6 +233,7 @@ export default function CreateCapsuleForm({
               )}
             </div>
 
+            {/* Image preview */}
             {imageFile && (
               <div className="w-full h-48 relative mt-2 rounded-lg overflow-hidden">
                 <Image
@@ -221,7 +245,7 @@ export default function CreateCapsuleForm({
               </div>
             )}
 
-            {/* Submit */}
+            {/* Submit button */}
             <button
               type="submit"
               className="w-full flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-medium hover:opacity-90 transition"

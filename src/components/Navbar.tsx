@@ -1,25 +1,21 @@
-"use client";
+// Navbar component สำหรับ navigation bar และ sidebar
+"use client"; // บอก Next.js ว่า component นี้รันบน client
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Home,
-  Search,
-  PlusCircle,
-  Bookmark,
-  User,
-  Menu,
-  LogOut,
-  Bell,
-  X,
+  Home, Search, PlusCircle, Bookmark, User, Menu, LogOut, Bell, X
 } from "lucide-react";
 import ProfileAvatar from "./ProfileAvatar";
 
+// Props ของ Navbar
 interface NavbarProps {
-  onOpenCreateCapsule?: () => void;
-  currentUser?: { name: string; avatar?: string };
+  onOpenCreateCapsule?: () => void; // callback เวลา user กดสร้าง capsule
+  currentUser?: { name: string; avatar?: string }; // ข้อมูล user ปัจจุบัน
 }
 
+// Component Logo (ใช้ซ้ำได้)
 const Logo = () => (
   <Link href="/home" className="cursor-pointer" aria-label="Home">
     <div className="flex items-center justify-center">
@@ -34,30 +30,34 @@ const Logo = () => (
   </Link>
 );
 
-// ----- Notification Types -----
+// Types ของ Notification
 interface Notification {
-  id: number;
-  title: string;
-  description: string;
-  href?: string;
+  id: number; // id unique ของ notification
+  title: string; // หัวข้อ
+  description: string; // รายละเอียด
+  href?: string; // ถ้ามี link ให้ redirect
 }
 
+// Props ของ Notification Modal
 interface NotificationModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  notifications: Notification[];
+  isOpen: boolean; // modal เปิดหรือปิด
+  onClose: () => void; // callback ปิด modal
+  notifications: Notification[]; // list ของ notification
 }
 
+// Notification Modal Component
 const NotificationModal = ({ isOpen, onClose, notifications }: NotificationModalProps) => (
   <>
+    {/* Overlay ดำโปร่งแสง */}
     <div
       className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
         isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
-      onClick={onClose}
+      onClick={onClose} // กด overlay ปิด modal
       aria-hidden="true"
     ></div>
 
+    {/* Container ของ modal */}
     <div
       className={`fixed top-1/2 left-1/2 z-50 w-11/12 max-w-md h-[80vh] bg-white rounded-xl shadow-2xl p-4 flex flex-col transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
         isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
@@ -66,6 +66,7 @@ const NotificationModal = ({ isOpen, onClose, notifications }: NotificationModal
       aria-modal="true"
       aria-label="Notifications Modal"
     >
+      {/* Header ของ modal */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">Notifications</h2>
         <button
@@ -77,6 +78,7 @@ const NotificationModal = ({ isOpen, onClose, notifications }: NotificationModal
         </button>
       </div>
 
+      {/* List Notifications */}
       {notifications.length === 0 ? (
         <p className="text-gray-500 text-center mt-10">No notifications</p>
       ) : (
@@ -84,8 +86,8 @@ const NotificationModal = ({ isOpen, onClose, notifications }: NotificationModal
           {notifications.map((n) => (
             <div
               key={n.id}
-              className="notification-item bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-pointer hover:scale-105 hover:shadow-md"
-              onClick={onClose}
+              className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-pointer hover:scale-105 hover:shadow-md"
+              onClick={onClose} // กด notification ปิด modal
             >
               {n.href ? (
                 <Link href={n.href}>
@@ -106,59 +108,55 @@ const NotificationModal = ({ isOpen, onClose, notifications }: NotificationModal
   </>
 );
 
-// ----- Navbar Types -----
+// Types ของ Navbar Items
 interface NavItem {
   name: string;
   icon: typeof Home;
-  href?: string;
+  href?: string; // link สำหรับ nav item
 }
 
 interface DropdownMenuItem {
   name: string;
   icon: typeof Home;
-  isDestructive?: boolean;
+  isDestructive?: boolean; // ถ้าเป็น logout หรือ destructive
   href?: string;
 }
 
+// Navbar Component
 const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [activePath, setActivePath] = useState("/home");
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  // --- State ---
+  const [menuOpen, setMenuOpen] = useState(false); // dropdown menu
+  const [modalOpen, setModalOpen] = useState(false); // notification modal
+  const [activePath, setActivePath] = useState("/home"); // path ปัจจุบัน
+  const [notifications, setNotifications] = useState<Notification[]>([]); // notifications list
 
-  // --- Notifications ---
+  // Load notifications จาก localStorage
   useEffect(() => {
     const stored = localStorage.getItem("notifications");
     if (stored) setNotifications(JSON.parse(stored));
     else {
       const initial: Notification[] = [
-        { id: Date.now(), title: "Upcoming Capsule", description: "A capsule will open in a few days! Don't forget to open it together." },
-        { id: Date.now() + 1, title: "Friend's Capsule", description: "Your friend has scheduled a capsule opening. Join in soon!" },
-        { id: Date.now() + 2, title: "New Comment", description: "Someone commented on your capsule! Check it out." },
+        { id: Date.now(), title: "Upcoming Capsule", description: "A capsule will open soon!" },
+        { id: Date.now() + 1, title: "Friend's Capsule", description: "Your friend scheduled a capsule." },
+        { id: Date.now() + 2, title: "New Comment", description: "Someone commented on your capsule." },
       ];
       setNotifications(initial);
       localStorage.setItem("notifications", JSON.stringify(initial));
     }
   }, []);
 
+  // เพิ่ม notifications แบบสุ่มทุก 60 วินาที
   useEffect(() => {
     const possibleNotifications: Omit<Notification, "id">[] = [
-      { title: "New Capsule Alert", description: "A capsule is opening soon! Don't miss it." },
-      { title: "Capsule Reminder", description: "Remember to check your upcoming capsules this week!" },
-      { title: "Friend Joined", description: "Your friend has joined a capsule opening. Get ready!" },
-      { title: "Weekly Update", description: "New capsules are available for the week. Open them now!" },
-      { title: "Special Event", description: "A special capsule event is coming soon. Be prepared!" },
-      { title: "Don't Forget", description: "Check your scheduled capsules before they open!" },
-      { title: "Team Capsule", description: "Your team has a capsule opening. Join together!" },
-      { title: "Milestone Alert", description: "A capsule has reached a milestone. See what's inside!" },
-      { title: "New Comment", description: "Someone commented on your capsule! Check it out." },
-      { title: "Friend Commented", description: "Your friend left a comment on a capsule you opened!" },
+      { title: "New Capsule Alert", description: "A capsule is opening soon!" },
+      { title: "Capsule Reminder", description: "Check your upcoming capsules." },
+      { title: "Friend Joined", description: "Your friend joined a capsule opening." },
     ];
 
     const interval = setInterval(() => {
+      // เลือก notifications ที่ยังไม่ซ้ำ
       const available = possibleNotifications.filter(p => !notifications.some(n => n.title === p.title));
       if (!available.length) return;
-
       const random = available[Math.floor(Math.random() * available.length)];
       const newNotification: Notification = { id: Date.now(), ...random, href: "/capsule/123" };
       const updated = [newNotification, ...notifications];
@@ -169,16 +167,20 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
     return () => clearInterval(interval);
   }, [notifications]);
 
+  // Toggle dropdown menu
   const toggleMenu = () => setMenuOpen(!menuOpen);
+
+  // Toggle notification modal
   const toggleModal = () => setModalOpen(!modalOpen);
 
+  // Logout
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.clear(); // ล้างข้อมูล user
     setMenuOpen(false);
-    window.location.href = "/login";
+    window.location.href = "/login"; // redirect ไป login
   };
 
-  // ----- Nav Items -----
+  // Nav items
   const navItems: NavItem[] = [
     { name: "Home", icon: Home, href: "/home" },
     { name: "Search", icon: Search, href: "/search" },
@@ -187,10 +189,12 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
     { name: "Profile", icon: User, href: "/profile" },
   ];
 
+  // Dropdown menu items
   const dropdownMenuItems: DropdownMenuItem[] = [
     { name: "Log Out", icon: LogOut, isDestructive: true },
   ];
 
+  // Dynamic class สำหรับ nav links
   const navLinkClass = (href?: string) => `
     flex flex-col items-center justify-center p-2 rounded-full
     text-gray-500 hover:bg-gray-100 hover:text-black
@@ -205,6 +209,7 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
 
   const headerButtonClass = "p-2 rounded-full transition-colors duration-150 text-gray-500 hover:bg-gray-100 hover:text-black relative";
 
+  // Handle Nav Click
   const handleNavClick = (item: NavItem) => {
     if (item.name === "Create" && onOpenCreateCapsule) onOpenCreateCapsule();
     else if (item.href) setActivePath(item.href);
@@ -214,6 +219,7 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
     <>
       {/* Header */}
       <header className="fixed top-0 left-0 w-full h-14 z-40 flex items-center justify-between px-4 md:px-6 bg-white/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none">
+        {/* Mobile: Notification & Avatar */}
         <div className="md:hidden flex items-center gap-2">
           <button className={headerButtonClass} aria-label="Notifications" onClick={toggleModal}>
             <Bell className="w-6 h-6" />
@@ -225,9 +231,13 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
           </button>
           {currentUser && <ProfileAvatar src={currentUser.avatar} size={28} />}
         </div>
+
+        {/* Mobile: Logo */}
         <div className="md:hidden flex-1 flex justify-center absolute left-1/2 transform -translate-x-1/2">
           <Logo />
         </div>
+
+        {/* Desktop Header Right */}
         <div className="hidden md:flex items-center gap-3 ml-auto">
           <button className={headerButtonClass} aria-label="Notifications" onClick={toggleModal}>
             <Bell className="w-6 h-6" />
@@ -239,6 +249,8 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
           </button>
           {currentUser && <ProfileAvatar src={currentUser.avatar} size={32} />}
         </div>
+
+        {/* Mobile Hamburger */}
         <div className="md:hidden">
           <button onClick={toggleMenu} className={headerButtonClass} aria-label="Menu">
             <Menu className="w-6 h-6" />
@@ -246,7 +258,7 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
         </div>
       </header>
 
-      {/* Sidebar */}
+      {/* Sidebar Desktop */}
       <nav className="hidden md:flex flex-col fixed top-0 left-0 h-screen w-[70px] z-30 transition-transform duration-300">
         <div className="pt-4 pb-10 flex justify-center items-center">
           <Logo />
@@ -272,7 +284,7 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
         </div>
       </nav>
 
-      {/* Mobile Bottom */}
+      {/* Mobile Bottom Navbar */}
       <nav className="fixed bottom-0 left-0 w-full h-14 z-40 md:hidden bg-white/50 backdrop-blur-sm">
         <div className="flex justify-around items-center h-full max-w-lg mx-auto">
           {navItems.map((item) => {
@@ -289,7 +301,6 @@ const Navbar = ({ onOpenCreateCapsule, currentUser }: NavbarProps) => {
           })}
         </div>
       </nav>
-
       {/* Dropdown Menu */}
       <div
         className={`fixed top-14 right-4 md:top-auto md:bottom-6 md:left-20 z-50 w-64 md:w-80 transform transition-all duration-300 ${

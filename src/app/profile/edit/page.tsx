@@ -1,79 +1,88 @@
+// src/app/profile/edit/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react"; // 💡 Import useEffect
-import { useRouter } from "next/navigation";
-// import { motion } from "framer-motion";
-import { Upload, User, Mail, Tag, Save, X } from "lucide-react";
-import Avatar from "@/components/Avatar";
-import CosmicToast from "@/components/CosmicToast";
-import { useProfileStore, UserProfile } from "@/store/profileStore";
+import React, { useState, useEffect } from "react"; // 💡 useState สำหรับ local state, useEffect สำหรับ cleanup
+import { useRouter } from "next/navigation"; // สำหรับ redirect หน้าอื่น
+import { Upload, User, Mail, Tag, Save, X } from "lucide-react"; // icons
+import Avatar from "@/components/Avatar"; // component avatar
+import CosmicToast from "@/components/CosmicToast"; // toast popup
+import { useProfileStore, UserProfile } from "@/store/profileStore"; // store สำหรับ profile
 
 export default function ProfileEditPage() {
   const router = useRouter();
-  const { profile, updateProfile } = useProfileStore();
-  const [localProfile, setLocalProfile] = useState<UserProfile>(profile);
-  const [showToast, setShowToast] = useState(false);
-  // 💡 เก็บ URL ชั่วคราวเก่าไว้เพื่อ cleanup
-  const [tempAvatarUrl, setTempAvatarUrl] = useState<string | null>(null);
+  const { profile, updateProfile } = useProfileStore(); // ดึง profile จาก store
+  const [localProfile, setLocalProfile] = useState<UserProfile>(profile); // state สำหรับ edit
+  const [showToast, setShowToast] = useState(false); // toast popup state
+  const [tempAvatarUrl, setTempAvatarUrl] = useState<string | null>(null); // 💡 เก็บ URL ชั่วคราวของ avatar
 
-  // 💡 CLEANUP: ล้าง URL ชั่วคราวเก่าทุกครั้งที่ localProfile.avatarUrl เปลี่ยน
+  // ==============================
+  // Cleanup URL เก่าของ avatar
+  // ==============================
   useEffect(() => {
-    // ถ้ามี tempAvatarUrl เดิมอยู่ และมันไม่ใช่ URL ปัจจุบัน ให้ทำการล้างทิ้ง
+    // ถ้ามี URL ชั่วคราวเก่า และมันไม่ใช่ avatar ใหม่ ให้ล้าง
     if (tempAvatarUrl && tempAvatarUrl !== localProfile.avatarUrl) {
       URL.revokeObjectURL(tempAvatarUrl);
-      setTempAvatarUrl(null); // ล้าง state tempAvatarUrl
+      setTempAvatarUrl(null);
     }
   }, [localProfile.avatarUrl, tempAvatarUrl]);
 
-  // 💡 CLEANUP: ล้าง URL ชั่วคราวสุดท้ายเมื่อคอมโพเนนต์ถูกถอดออก
+  // cleanup เมื่อ component ถูก unmount
   useEffect(() => {
     return () => {
-      if (tempAvatarUrl) {
-        URL.revokeObjectURL(tempAvatarUrl);
-      }
+      if (tempAvatarUrl) URL.revokeObjectURL(tempAvatarUrl);
     };
-  }, [tempAvatarUrl]); // ใช้ tempAvatarUrl ใน dependency array เพื่อให้แน่ใจว่าล้างตัวที่ถูกใช้ล่าสุด
+  }, [tempAvatarUrl]);
 
+  // ==============================
+  // ฟังก์ชัน handle input change
+  // ==============================
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setLocalProfile((prev) => ({ ...prev, [name]: value }));
+    setLocalProfile((prev) => ({ ...prev, [name]: value })); // update field ตาม name
   };
 
+  // ==============================
+  // ฟังก์ชัน handle avatar upload
+  // ==============================
   const handleAvatarChange: React.ChangeEventHandler<HTMLInputElement> = (
     e
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const newAvatarUrl = URL.createObjectURL(file);
-    
-    // 💡 ตั้งค่า localProfile ให้แสดงรูปใหม่
-    setLocalProfile((prev) => ({ ...prev, avatarUrl: newAvatarUrl }));
-    // 💡 เก็บ URL ใหม่ไว้ใน state เพื่อใช้สำหรับ cleanup ในรอบถัดไป
-    setTempAvatarUrl(newAvatarUrl); 
-
-    // **หมายเหตุ:** หากต้องการล้าง URL เก่าทันทีที่เปลี่ยนไฟล์ใหม่
-    // คุณอาจต้องใช้ callback form ของ setLocalProfile และ setTempAvatarUrl 
-    // เพื่อให้จัดการการล้าง URL เก่าก่อนจะ set URL ใหม่ แต่การใช้ useEffect 
-    // ตามโค้ดด้านบนจะจัดการได้ง่ายกว่าใน React
+    const newAvatarUrl = URL.createObjectURL(file); // 💡 สร้าง object URL ชั่วคราว
+    setLocalProfile((prev) => ({ ...prev, avatarUrl: newAvatarUrl })); // update avatar ใน form
+    setTempAvatarUrl(newAvatarUrl); // เก็บ URL ใหม่เพื่อ cleanup รอบต่อไป
   };
 
+  // ==============================
+  // ฟังก์ชัน submit form
+  // ==============================
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    updateProfile(localProfile); // ✅ อัปเดต store ตอน submit
-    setShowToast(true);
-    // 💡 หาก URL ที่ถูกบันทึกใน store คือ URL ชั่วคราว (Object URL) 
-    // คุณควรเปลี่ยนไปใช้การอัปโหลดจริงและใช้ URL ของรูปที่เซิร์ฟเวอร์
-    // ตอบกลับมาแทน ก่อนจะ push ไปหน้าอื่น
+    updateProfile(localProfile); // ✅ update store
+    setShowToast(true); // แสดง toast
+
+    // redirect หลัง 1.5 วินาที
     setTimeout(() => router.push("/profile"), 1500);
+
+    // 💡 หมายเหตุ: ถ้าใช้ Object URL จริงต้องอัปโหลดไป server ก่อน
+    // และเอา URL ของ server มา update แทน
   };
 
+  // ==============================
+  // ฟังก์ชัน cancel
+  // ==============================
   const handleCancel = () => router.push("/profile");
 
+  // ==============================
+  // JSX
+  // ==============================
   return (
     <main className="min-h-screen bg-white px-6 py-8">
+      {/* Toast */}
       {showToast && (
         <CosmicToast
           message="Profile Updated!"
@@ -87,7 +96,7 @@ export default function ProfileEditPage() {
         onSubmit={handleSubmit}
         className="max-w-xl mx-auto p-8 rounded-3xl bg-gray-50 border border-gray-200 shadow-xl space-y-6"
       >
-        {/* Avatar */}
+        {/* Avatar Upload */}
         <div className="flex flex-col items-center">
           <Avatar
             name={localProfile.name}
@@ -105,7 +114,7 @@ export default function ProfileEditPage() {
           </label>
         </div>
 
-        {/* Name */}
+        {/* Username */}
         <div>
           <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
             <User size={16} className="mr-2" /> Username

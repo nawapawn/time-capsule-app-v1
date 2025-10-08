@@ -1,11 +1,13 @@
-"use client";
+// CapsuleCard component สำหรับแสดง capsule ในรูปแบบการ์ด
+"use client"; // บอก Next.js ว่านี่เป็น component ฝั่ง client
 
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { CapsuleType, formatViews } from "@/utils/capsuleUtils";
-import { Lock, Unlock, Users, User, Eye, Bookmark, Share2, MessageCircle } from "lucide-react";
-import Avatar from "./Avatar";
+import { CapsuleType, formatViews } from "@/utils/capsuleUtils"; // CapsuleType คือ interface ของ capsule, formatViews คือฟังก์ชันแปลงตัวเลขวิว
+import { Lock, Unlock, Users, User, Eye, Bookmark, Share2, MessageCircle } from "lucide-react"; // ไอคอน
+import Avatar from "./Avatar"; // Component แสดง avatar ผู้สร้าง
 
+// Mood options สำหรับ capsule
 const MOODS = [
   { name: "Happy", emoji: "😄", color: "text-yellow-600" }, 
   { name: "Sad", emoji: "😢", color: "text-blue-600" },
@@ -16,11 +18,12 @@ const MOODS = [
 ];
 
 interface CapsuleCardProps {
-  capsule: CapsuleType & { mood?: typeof MOODS[0] };
-  index: number;
-  onBookmark?: (capsule: CapsuleType) => void; 
+  capsule: CapsuleType & { mood?: typeof MOODS[0] }; // Capsule + mood (optional)
+  index: number; // อาจเอาไปใช้โชว์ ranking
+  onBookmark?: (capsule: CapsuleType) => void; // callback บันทึก bookmark
 }
 
+// ฟังก์ชันช่วย map visibility ของ capsule เป็น icon + text + style
 const getVisibilityProps = (visibility: CapsuleType['visibility']) => {
   const effectiveVisibility = visibility || 'private';
   switch (effectiveVisibility) {
@@ -33,31 +36,33 @@ const getVisibilityProps = (visibility: CapsuleType['visibility']) => {
 };
 
 export default function CapsuleCard({ capsule, onBookmark }: CapsuleCardProps) {
-  const unlockDate = capsule.targetDate;
-  const [now, setNow] = useState<Date>(new Date());
-  const isLocked = unlockDate.getTime() > now.getTime();
-  const visibilityProps = getVisibilityProps(capsule.visibility);
-  const VisibilityIcon = visibilityProps.icon;
+  const unlockDate = capsule.targetDate; // วันที่เปิด capsule
+  const [now, setNow] = useState<Date>(new Date()); // เวลาปัจจุบัน client-side
+  const isLocked = unlockDate.getTime() > now.getTime(); // ตรวจว่า capsule ยังล็อกอยู่หรือไม่
+  const visibilityProps = getVisibilityProps(capsule.visibility); // props สำหรับ visibility
+  const VisibilityIcon = visibilityProps.icon; // icon ของ visibility
 
-  const creatorName = capsule.creator || 'User';
-  const avatarUrl = capsule.creatorAvatar;
-  const commentCount = 0;
-  const isBookmarked = capsule.bookmarked || false;
+  const creatorName = capsule.creator || 'User'; // fallback ชื่อผู้สร้าง
+  const avatarUrl = capsule.creatorAvatar; // avatar ผู้สร้าง
+  const commentCount = 0; // จำนวนคอมเมนต์ (ยังไม่ได้ implement)
+  const isBookmarked = capsule.bookmarked || false; // bookmark state
 
-  // ⏱ Countdown client-side only
+  // ⏱ Countdown client-side
   const [countdown, setCountdown] = useState("Loading...");
   useEffect(() => {
-    if (!isLocked) {
+    if (!isLocked) { // ถ้า unlock แล้ว
       setCountdown("Opened!");
       return;
     }
 
+    // interval update countdown ทุกวินาที
     const interval = setInterval(() => {
       const diff = unlockDate.getTime() - Date.now();
       if (diff <= 0) {
-        setCountdown("Opened!");
+        setCountdown("Opened!"); // เมื่อถึงเวลาแล้ว
         clearInterval(interval);
       } else {
+        // คำนวณ d/h/m/s
         const totalSeconds = Math.floor(diff / 1000);
         const d = Math.floor(totalSeconds / (60 * 60 * 24));
         const h = Math.floor((totalSeconds / (60 * 60)) % 24);
@@ -67,16 +72,17 @@ export default function CapsuleCard({ capsule, onBookmark }: CapsuleCardProps) {
       }
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(interval); // cleanup
   }, [unlockDate, isLocked]);
 
-  // ⭐️ Client-side only unlock date string
+  // ⭐️ client-side only format วันเปิด
   const unlockDateString = useMemo(() => {
     return unlockDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
   }, [unlockDate]);
 
   return (
     <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col relative min-w-full transition-all hover:shadow-lg">
+      {/* Mood badge */}
       {capsule.mood && (
         <div className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full shadow-md z-10">
           <span className={`text-sm font-medium ${capsule.mood.color}`}>
@@ -85,6 +91,7 @@ export default function CapsuleCard({ capsule, onBookmark }: CapsuleCardProps) {
         </div>
       )}
 
+      {/* รูปภาพ capsule */}
       <div className="relative w-full aspect-video bg-gray-100">
         {capsule.imageSrc && (
           <Image
@@ -97,6 +104,7 @@ export default function CapsuleCard({ capsule, onBookmark }: CapsuleCardProps) {
           />
         )}
 
+        {/* Overlay ถ้า capsule ยังล็อกอยู่ */}
         {isLocked ? (
           <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white/90 text-center p-4">
             <Lock size={30} className="mb-2" />
@@ -114,18 +122,22 @@ export default function CapsuleCard({ capsule, onBookmark }: CapsuleCardProps) {
         )}
       </div>
 
+      {/* ข้อมูล capsule */}
       <div className="p-3 flex flex-col gap-2">
         <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{capsule.title}</h3>
 
+        {/* Avatar + creator */}
         <div className="flex items-center gap-2 mt-1">
           <Avatar name={creatorName} size={32} avatarUrl={avatarUrl} />
           <span className="text-xs text-gray-700">@{creatorName}</span>
         </div>
 
+        {/* Countdown */}
         <div className="border-t pt-2 border-gray-100 text-xs text-gray-500">
           <span className="font-semibold text-blue-600">{isLocked ? `Opening in: ${countdown}` : countdown}</span>
         </div>
 
+        {/* Footer icons */}
         <div className="flex justify-between items-center mt-2">
           {isLocked ? (
             <span className="text-xs text-gray-400 italic">Locked</span>
@@ -136,6 +148,7 @@ export default function CapsuleCard({ capsule, onBookmark }: CapsuleCardProps) {
           )}
 
           <div className="flex gap-2 sm:gap-3">
+            {/* Bookmark */}
             <button
               onClick={() => onBookmark && onBookmark(capsule)}
               className="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:bg-blue-100 active:scale-110"
@@ -144,6 +157,7 @@ export default function CapsuleCard({ capsule, onBookmark }: CapsuleCardProps) {
               <Bookmark className={`h-5 w-5 transition-colors duration-200 ${isBookmarked ? "text-blue-500 fill-blue-500" : "text-gray-400"}`} />
             </button>
 
+            {/* Share */}
             <button
               onClick={() => console.log("Share clicked")}
               className="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:bg-blue-100 active:scale-110"
@@ -152,6 +166,7 @@ export default function CapsuleCard({ capsule, onBookmark }: CapsuleCardProps) {
               <Share2 className="h-5 w-5 text-gray-400" />
             </button>
 
+            {/* Comment */}
             <button
               onClick={() => console.log("Comment clicked")}
               className="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:bg-blue-100 active:scale-110 relative"
