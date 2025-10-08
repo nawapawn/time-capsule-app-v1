@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // 💡 Import useEffect
 import { useRouter } from "next/navigation";
 // import { motion } from "framer-motion";
 import { Upload, User, Mail, Tag, Save, X } from "lucide-react";
@@ -13,6 +13,26 @@ export default function ProfileEditPage() {
   const { profile, updateProfile } = useProfileStore();
   const [localProfile, setLocalProfile] = useState<UserProfile>(profile);
   const [showToast, setShowToast] = useState(false);
+  // 💡 เก็บ URL ชั่วคราวเก่าไว้เพื่อ cleanup
+  const [tempAvatarUrl, setTempAvatarUrl] = useState<string | null>(null);
+
+  // 💡 CLEANUP: ล้าง URL ชั่วคราวเก่าทุกครั้งที่ localProfile.avatarUrl เปลี่ยน
+  useEffect(() => {
+    // ถ้ามี tempAvatarUrl เดิมอยู่ และมันไม่ใช่ URL ปัจจุบัน ให้ทำการล้างทิ้ง
+    if (tempAvatarUrl && tempAvatarUrl !== localProfile.avatarUrl) {
+      URL.revokeObjectURL(tempAvatarUrl);
+      setTempAvatarUrl(null); // ล้าง state tempAvatarUrl
+    }
+  }, [localProfile.avatarUrl, tempAvatarUrl]);
+
+  // 💡 CLEANUP: ล้าง URL ชั่วคราวสุดท้ายเมื่อคอมโพเนนต์ถูกถอดออก
+  useEffect(() => {
+    return () => {
+      if (tempAvatarUrl) {
+        URL.revokeObjectURL(tempAvatarUrl);
+      }
+    };
+  }, [tempAvatarUrl]); // ใช้ tempAvatarUrl ใน dependency array เพื่อให้แน่ใจว่าล้างตัวที่ถูกใช้ล่าสุด
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -26,14 +46,27 @@ export default function ProfileEditPage() {
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const newAvatarUrl = URL.createObjectURL(file);
+    
+    // 💡 ตั้งค่า localProfile ให้แสดงรูปใหม่
     setLocalProfile((prev) => ({ ...prev, avatarUrl: newAvatarUrl }));
+    // 💡 เก็บ URL ใหม่ไว้ใน state เพื่อใช้สำหรับ cleanup ในรอบถัดไป
+    setTempAvatarUrl(newAvatarUrl); 
+
+    // **หมายเหตุ:** หากต้องการล้าง URL เก่าทันทีที่เปลี่ยนไฟล์ใหม่
+    // คุณอาจต้องใช้ callback form ของ setLocalProfile และ setTempAvatarUrl 
+    // เพื่อให้จัดการการล้าง URL เก่าก่อนจะ set URL ใหม่ แต่การใช้ useEffect 
+    // ตามโค้ดด้านบนจะจัดการได้ง่ายกว่าใน React
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     updateProfile(localProfile); // ✅ อัปเดต store ตอน submit
     setShowToast(true);
+    // 💡 หาก URL ที่ถูกบันทึกใน store คือ URL ชั่วคราว (Object URL) 
+    // คุณควรเปลี่ยนไปใช้การอัปโหลดจริงและใช้ URL ของรูปที่เซิร์ฟเวอร์
+    // ตอบกลับมาแทน ก่อนจะ push ไปหน้าอื่น
     setTimeout(() => router.push("/profile"), 1500);
   };
 

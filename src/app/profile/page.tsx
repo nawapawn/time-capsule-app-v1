@@ -9,7 +9,6 @@ import CapsuleCard from "@/components/CapsuleCard";
 import { mockCapsules } from "@/lib/mockData";
 import CreateCapsuleForm from "@/components/CreateCapsuleForm";
 import { CapsuleType } from "@/utils/capsuleUtils";
-import { moodOptions } from "@/utils/capsuleUtils";
 import { useProfileStore } from "@/store/profileStore";
 
 
@@ -154,7 +153,7 @@ const profile = useProfileStore((state) => state.profile);
             transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
             className="w-32 h-32 rounded-full bg-gray-50 flex items-center justify-center border border-gray-200 shadow-md"
           >
-            <Avatar name="User" size={96} avatarUrl="" />
+            <Avatar name={profile.name} size={96} avatarUrl={profile.avatarUrl} />
           </motion.div>
 
           <h1 className="text-4xl font-extrabold mt-6 text-gray-900">
@@ -365,7 +364,7 @@ const profile = useProfileStore((state) => state.profile);
                   </h4>
                   <p className="text-gray-700 text-base whitespace-pre-wrap leading-relaxed">
                     {selectedCapsule.content ||
-                      "⚠️ ไม่มีเนื้อหาที่ระบุไว้สำหรับแคปซูลนี้"}
+                      "⚠️ No content specified for this capsule." /* 💡 แก้ไขข้อความไทยเป็นอังกฤษ */}
                   </p>
                 </div>
               )}
