@@ -21,12 +21,10 @@ import { useDropzone } from "react-dropzone"; // drag & drop image
 const capsuleSchema = z.object({
   title: z.string().nonempty("Please enter the capsule title."), // title ห้ามว่าง
   content: z.string().nonempty("Please write a message to your future self."), // content ห้ามว่าง
-  openDate: z
-    .string()
-    .refine(
-      (val) => typeof window === "undefined" || new Date(val) > new Date(),
-      "The date and time must be in the future." // ต้องเป็นอนาคต
-    ),
+  openDate: z.string().refine(
+    (val) => typeof window === "undefined" || new Date(val) > new Date(),
+    "The date and time must be in the future." // ต้องเป็นอนาคต
+  ),
 });
 
 type CapsuleFormValues = z.infer<typeof capsuleSchema>; // type จาก schema
@@ -96,8 +94,8 @@ export default function CreateCapsuleForm({
         id: Date.now().toString(),
         title: data.title,
         content: data.content,
-        creator: "You",
-        creatorAvatar: "https://i.pravatar.cc/150?img=68",
+        creator: "Astronaut_393",
+        creatorAvatar: "/export-removebg-preview.png", // ใช้ path จาก public โดยตรง
         imageSrc,
         mood: moodObject,
         targetDate: new Date(data.openDate),
