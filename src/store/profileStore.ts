@@ -19,7 +19,7 @@ interface ProfileState {
 
 // ค่าเริ่มต้นของโปรไฟล์
 const DEFAULT_PROFILE: UserProfile = {
-  name: "Astronaut_393",
+  name: "Astronaut",
   email: "astro@example.com",
   tagline: "Exploring memories through time & space",
   avatarUrl: "",

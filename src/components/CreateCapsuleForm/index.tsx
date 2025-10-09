@@ -94,7 +94,7 @@ export default function CreateCapsuleForm({
         id: Date.now().toString(),
         title: data.title,
         content: data.content,
-        creator: "Astronaut_393",
+        creator: "Astronaut",
         creatorAvatar: "/export-removebg-preview.png", // ใช้ path จาก public โดยตรง
         imageSrc,
         mood: moodObject,
